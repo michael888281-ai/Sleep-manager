@@ -3,155 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sleep Manager Ultimate</title>
+    <title>Sleep Manager Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         :root {
-            --blue: #0088cc; --light-blue: #eff7ff; --bg: #ffffff;
-            --text: #222; --gray: #8e8e93; --out: #effdde; --premium: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            --blue: #0088cc; --light: #eff7ff; --bg: #ffffff;
+            --text: #222; --gray: #8e8e93; --out: #effdde; --in: #ffffff;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); overflow: hidden; }
 
-        /* AUTH SCREEN */
-        #auth { position: fixed; inset: 0; background: #fff; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 30px; }
-        .auth-card { width: 100%; max-width: 350px; text-align: center; }
-        .auth-card input { width: 100%; padding: 15px; border: 1.5px solid #eee; border-radius: 12px; margin-bottom: 10px; font-size: 16px; transition: 0.3s; }
-        .auth-card input:focus { border-color: var(--blue); }
-        .btn-blue { width: 100%; padding: 15px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        /* AUTH & REGISTRATION */
+        #auth-screen { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 30px; }
+        .auth-box { width: 100%; max-width: 350px; text-align: center; }
+        .auth-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 14px; margin-bottom: 12px; font-size: 16px; }
+        .btn-main { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 14px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
-        /* MAIN APP */
-        .app-grid { display: none; flex-direction: column; height: 100vh; }
-        header { padding: 10px 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #f2f2f2; background: #fff; }
-        .search-wrap { flex: 1; background: #f1f1f2; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; }
-        .search-wrap input { background: none; border: none; width: 100%; outline: none; margin-left: 8px; }
+        /* APP LAYOUT */
+        .app-container { display: none; flex-direction: column; height: 100vh; }
+        header { padding: 12px 16px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; background: #fff; z-index: 100; }
+        .search-area { flex: 1; background: #f1f1f2; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; }
+        .search-area input { background: none; border: none; width: 100%; outline: none; margin-left: 8px; font-size: 15px; }
 
         /* STORIES */
-        .stories { display: flex; gap: 12px; padding: 15px; overflow-x: auto; background: #fff; border-bottom: 1px solid #f2f2f2; }
-        .st-item { min-width: 65px; height: 65px; border-radius: 50%; border: 2.5px solid var(--blue); padding: 2px; flex-shrink: 0; cursor: pointer; }
-        .st-inner { width: 100%; height: 100%; border-radius: 50%; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .st-inner img { width: 100%; height: 100%; object-fit: cover; }
+        .stories-bar { display: flex; gap: 12px; padding: 15px; overflow-x: auto; border-bottom: 1px solid #eee; }
+        .st-ring { min-width: 68px; height: 68px; border-radius: 50%; border: 2.5px solid var(--blue); padding: 2px; flex-shrink: 0; position: relative; }
+        .st-img { width: 100%; height: 100%; border-radius: 50%; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .st-img img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* CHAT LIST */
-        .content { flex: 1; overflow-y: auto; background: #fff; }
-        .chat-row { display: flex; padding: 12px 15px; gap: 15px; align-items: center; border-bottom: 0.5px solid #f2f2f2; cursor: pointer; }
-        .chat-row:active { background: #f5f5f5; }
-        .ava { width: 54px; height: 54px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; position: relative; }
-        .premium-border { border: 2px solid #e1bee7; box-shadow: 0 0 10px rgba(225, 190, 231, 0.5); }
-        .crown { position: absolute; top: -5px; right: -5px; font-size: 14px; }
+        /* LISTS */
+        .chat-scroll { flex: 1; overflow-y: auto; background: #fff; }
+        .chat-card { display: flex; padding: 12px 16px; gap: 15px; align-items: center; border-bottom: 0.5px solid #f0f0f0; transition: 0.2s; cursor: pointer; }
+        .chat-card:active { background: #f5f8fa; }
+        .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; }
+        .card-body { flex: 1; }
+        .card-name { font-weight: bold; font-size: 16px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+        .card-msg { font-size: 14px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 
         /* CHAT WINDOW */
-        #chat-win { position: fixed; inset: 0; background: #fff; z-index: 4000; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
-        #chat-win.open { transform: translateX(0); }
-        .win-head { padding: 10px 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #f2f2f2; background: #fff; }
-        #msgs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background: #e7ebf0; }
-        .msg-b { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 15px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .msg-b.in { background: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .msg-b.out { background: var(--out); align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg-img { width: 100%; border-radius: 8px; margin: 5px 0; }
-        .msg-audio { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+        #chat-win { position: fixed; inset: 0; background: #e7ebf0; z-index: 5000; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
+        #chat-win.active { transform: translateX(0); }
+        .win-header { padding: 10px 15px; background: #fff; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #ddd; }
+        #msg-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .bubble { padding: 8px 14px; border-radius: 16px; max-width: 80%; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
+        .bubble.mine { align-self: flex-end; background: var(--out); border-bottom-right-radius: 4px; }
+        .bubble.theirs { align-self: flex-start; background: var(--in); border-bottom-left-radius: 4px; }
+        .bubble img { width: 100%; border-radius: 10px; margin: 5px 0; }
+        .timestamp { font-size: 10px; opacity: 0.5; text-align: right; margin-top: 4px; }
 
-        /* INPUT PANEL */
-        .inp-pan { padding: 10px; display: flex; align-items: center; gap: 12px; background: #fff; border-top: 1px solid #f2f2f2; }
-        .inp-pan input { flex: 1; padding: 10px 15px; border: none; background: #f1f1f2; border-radius: 20px; outline: none; }
-        .icon { font-size: 24px; cursor: pointer; color: var(--blue); transition: 0.2s; }
-        .icon:active { transform: scale(0.9); }
-        .rec-pulse { color: #f44336; animation: pulse 1s infinite; }
+        /* BOTTOM INPUT */
+        .input-bar { padding: 10px; background: #fff; display: flex; align-items: center; gap: 12px; border-top: 1px solid #ddd; }
+        .input-bar input { flex: 1; padding: 12px 16px; border: none; background: #f1f1f2; border-radius: 25px; outline: none; font-size: 16px; }
+        .action-icon { font-size: 26px; color: var(--blue); cursor: pointer; transition: 0.2s; }
+        .action-icon:active { transform: scale(0.85); }
+        .rec-now { color: #ff3b30; animation: blink 1s infinite; }
 
-        /* MODALS */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 6000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-body { background: #fff; width: 100%; max-width: 320px; border-radius: 20px; padding: 25px; text-align: center; }
+        /* PROFILE MODAL */
+        #profile-win { position: fixed; inset: 0; background: #fff; z-index: 6000; transform: translateY(100%); transition: 0.4s; padding: 40px 20px; text-align: center; }
+        #profile-win.active { transform: translateY(0); }
+        .prof-ava { width: 100px; height: 100px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; }
 
-        /* NAV */
-        nav { display: flex; justify-content: space-around; padding: 10px; background: #fff; border-top: 1px solid #f2f2f2; }
-        .tab { text-align: center; font-size: 11px; color: var(--gray); cursor: pointer; }
-        .tab.active { color: var(--blue); }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div id="auth">
-        <div class="auth-card">
-            <h1 style="color:var(--blue); margin-bottom:5px;">Sleep Manager</h1>
-            <p style="color:var(--gray); margin-bottom:25px;">Займи свой уникальный @юзер</p>
-            <input type="text" id="a-nick" placeholder="Твое имя">
-            <input type="text" id="a-user" placeholder="@username (английские буквы)">
-            <p id="a-err" style="color:red; font-size:12px; display:none; margin-bottom:10px;">Этот @юзер уже занят!</p>
-            <button class="btn-blue" onclick="tryAuth()">Начать общение</button>
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h1 style="color:var(--blue)">Sleep Manager</h1>
+            <p style="color:var(--gray)">Зарегистрируй свой уникальный @юзер</p>
+            <input type="text" id="reg-nick" placeholder="Твое имя">
+            <input type="text" id="reg-user" placeholder="@username (только английские)">
+            <p id="err-text" style="color:red; font-size:13px; display:none; margin-bottom:15px;">Ошибка: юзернейм занят!</p>
+            <button class="btn-main" onclick="handleAuth()">Войти в мессенджер</button>
         </div>
     </div>
 
-    <div class="app-grid" id="app">
+    <div class="app-container" id="main-app">
         <header>
-            <div class="icon" onclick="openProfile()">☰</div>
-            <div class="search-wrap">
+            <div class="action-icon" onclick="toggleProfile()">☰</div>
+            <div class="search-area">
                 <span>🔍</span>
-                <input type="text" id="search-in" placeholder="Поиск по @юзеру..." oninput="searchUsers()">
+                <input type="text" id="search-input" placeholder="Поиск людей по @юзеру..." oninput="searchEngine()">
             </div>
         </header>
 
-        <div class="stories">
-            <div class="st-item" onclick="postStory()" style="border-style:dashed; border-color:var(--gray);">
-                <div class="st-inner" style="color:var(--gray)">+</div>
+        <div class="stories-bar">
+            <div class="st-ring" onclick="addMyStory()" style="border-style:dashed; border-color:var(--gray);">
+                <div class="st-img" style="color:var(--gray); font-size:30px">+</div>
             </div>
-            <div id="st-list" style="display:flex; gap:10px"></div>
+            <div id="stories-feed" style="display:flex; gap:12px"></div>
         </div>
 
-        <div class="content">
-            <div class="chat-row" onclick="openRoom('global', 'Общий чат')">
-                <div class="ava">🌍</div>
-                <div style="flex:1">
-                    <div style="font-weight:bold">Общий чат</div>
-                    <div style="font-size:13px; color:var(--gray)">Зайди и познакомься</div>
+        <div class="chat-scroll">
+            <div class="chat-card" onclick="openRoom('global', 'Общий чат')">
+                <div class="avatar">🌍</div>
+                <div class="card-body">
+                    <div class="card-name">Общий чат</div>
+                    <div class="card-msg">Все пользователи здесь</div>
                 </div>
             </div>
-            <div id="chat-list-dyn"></div>
+            <div id="dynamic-list"></div>
         </div>
-
-        <nav>
-            <div class="tab active" onclick="location.reload()">💬<br>Чаты</div>
-            <div class="tab" onclick="openModal('group-mod')">👥<br>Группы</div>
-            <div class="tab" onclick="openModal('prem-mod')">💎<br>Премиум</div>
-        </nav>
     </div>
 
     <div id="chat-win">
-        <div class="win-head">
-            <div class="icon" onclick="closeRoom()">←</div>
-            <div id="win-title" style="font-weight:bold; flex:1">Чат</div>
-            <div class="icon" onclick="alert('Звонок...')">📞</div>
+        <div class="win-header">
+            <div class="action-icon" onclick="closeRoom()">←</div>
+            <div id="chat-target-name" style="font-weight:bold; flex:1">Чат</div>
+            <div class="action-icon" onclick="alert('Звонок...')">📞</div>
         </div>
-        <div id="msgs"></div>
-        <div class="inp-pan">
-            <div class="icon" onclick="sendMedia('img')">🖼️</div>
-            <div class="icon" onclick="sendMedia('stick')">🎭</div>
-            <input type="text" id="m-in" placeholder="Сообщение...">
-            <div class="icon" id="mic" onmousedown="startVoice()" onmouseup="stopVoice()" ontouchstart="startVoice()" ontouchend="stopVoice()">🎙️</div>
-            <div class="icon" onclick="sendMsg()">➤</div>
-        </div>
-    </div>
-
-    <div class="modal" id="group-mod" onclick="closeModals()">
-        <div class="modal-body" onclick="event.stopPropagation()">
-            <h3>Создать группу</h3>
-            <input type="text" id="g-name" placeholder="Название группы" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #eee;">
-            <button class="btn-blue" onclick="createGroup()">Создать</button>
+        <div id="msg-list"></div>
+        <div class="input-bar">
+            <label for="img-file" class="action-icon">🖼️</label>
+            <input type="file" id="img-file" accept="image/*" hidden onchange="handleImage(this)">
+            <input type="text" id="msg-input" placeholder="Сообщение...">
+            <div class="action-icon" id="mic-btn" onmousedown="recStart()" onmouseup="recStop()" ontouchstart="recStart()" ontouchend="recStop()">🎙️</div>
+            <div class="action-icon" onclick="sendText()">➤</div>
         </div>
     </div>
 
-    <div class="modal" id="prem-mod" onclick="closeModals()">
-        <div class="modal-body" onclick="event.stopPropagation()">
-            <h2 style="color:#9c27b0">Sleep Premium 💎</h2>
-            <p style="font-size:14px; color:var(--gray)">Корона в профиле, ГС без ограничений и золотой статус.</p>
-            <button class="btn-blue" style="background:#9c27b0" onclick="buyPremium()">Купить за 0.00$</button>
-        </div>
+    <div id="profile-win">
+        <div class="action-icon" onclick="toggleProfile()" style="position:absolute; top:20px; left:20px;">✕</div>
+        <div class="prof-ava" id="my-ava">S</div>
+        <h2 id="my-name">Имя пользователя</h2>
+        <p id="my-handle" style="color:var(--gray)">@username</p>
+        <button class="btn-main" style="background:#9c27b0; margin-top:20px;" onclick="getPremium()">Купить Премиум 💎</button>
+        <button class="btn-main" style="background:#f44336; margin-top:10px;" onclick="localStorage.clear(); location.reload();">Выйти из аккаунта</button>
     </div>
 
     <script>
-        const cfg = {
+        // --- КОНФИГУРАЦИЯ FIREBASE (ТВОИ ДАННЫЕ) ---
+        const firebaseConfig = {
             apiKey: "AIzaSyDzCviqV3rCSLZL-K8h7n6j7aLGkZEmybM",
             authDomain: "sleep-menager.firebaseapp.com",
             projectId: "sleep-menager",
@@ -160,174 +145,185 @@
             appId: "1:3927631074:web:a3a604c7147e31a900eabb",
             databaseURL: "https://sleep-menager-default-rtdb.firebaseio.com"
         };
-        firebase.initializeApp(cfg);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let me = JSON.parse(localStorage.getItem('sm_me'));
-        let activeId = "";
+        let myData = JSON.parse(localStorage.getItem('sm_data'));
+        let activeChatId = "";
         let recorder;
-        let chunks = [];
+        let audioChunks = [];
 
-        if(me) {
-            document.getElementById('auth').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            startApp();
+        if(myData) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            initMain();
         }
 
-        async function tryAuth() {
-            const nick = document.getElementById('a-nick').value.trim();
-            const user = document.getElementById('a-user').value.trim().toLowerCase().replace('@','');
-            if(!nick || !user) return alert("Заполни всё!");
+        async function handleAuth() {
+            const nick = document.getElementById('reg-nick').value.trim();
+            const user = document.getElementById('reg-user').value.trim().toLowerCase().replace('@','');
+            if(!nick || !user) return alert("Заполни все поля!");
 
-            const snap = await db.ref('users/' + user).once('value');
-            if(snap.exists()) return document.getElementById('a-err').style.display = 'block';
-
-            me = { nick, user: '@'+user, prem: false };
-            await db.ref('users/' + user).set(me);
-            localStorage.setItem('sm_me', JSON.stringify(me));
-            location.reload();
-        }
-
-        function startApp() {
-            loadStories();
-            loadGroups();
-        }
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-
-        function openRoom(id, title) {
-            activeId = id;
-            document.getElementById('win-title').innerText = title;
-            document.getElementById('chat-win').classList.add('open');
-            syncMsgs();
-        }
-        function closeRoom() { document.getElementById('chat-win').classList.remove('open'); }
-
-        function sendMsg(audio = null, img = null) {
-            const input = document.getElementById('m-in');
-            if(!input.value && !audio && !img) return;
-            db.ref('msgs/' + activeId).push({
-                u: me.nick, usr: me.user, p: me.prem,
-                m: input.value, a: audio, i: img,
-                t: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-            });
-            input.value = "";
-        }
-
-        function syncMsgs() {
-            db.ref('msgs/' + activeId).on('value', s => {
-                const box = document.getElementById('msgs');
-                box.innerHTML = "";
-                s.forEach(c => {
-                    const d = c.val();
-                    const isMe = d.usr === me.user;
-                    let body = d.m ? `<div>${d.m}</div>` : "";
-                    if(d.i) body = `<img class="msg-img" src="${d.i}">`;
-                    if(d.a) body = `<div class="msg-audio" onclick="new Audio('${d.a}').play()"><span>▶</span> <b>Голосовое</b></div>`;
-                    
-                    box.innerHTML += `
-                        <div class="msg-b ${isMe?'out':'in'}">
-                            ${!isMe ? `<small style="color:var(--blue); font-weight:bold">${d.u} ${d.p?'💎':''}</small>` : ''}
-                            ${body}
-                            <div style="font-size:9px; opacity:0.4; text-align:right">${d.t}</div>
-                        </div>`;
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        async function startVoice() {
-            try {
-                const s = await navigator.mediaDevices.getUserMedia({audio:true});
-                recorder = new MediaRecorder(s);
-                chunks = [];
-                document.getElementById('mic').classList.add('rec-pulse');
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const blob = new Blob(chunks, {type:'audio/webm'});
-                    const r = new FileReader();
-                    r.readAsDataURL(blob);
-                    r.onloadend = () => sendMsg(r.result);
-                };
-                recorder.start();
-            } catch(e) { alert("Дай доступ к микро!"); }
-        }
-        function stopVoice() { if(recorder) { recorder.stop(); document.getElementById('mic').classList.remove('rec-pulse'); } }
-
-        function sendMedia(type) {
-            const url = prompt(type === 'img' ? "Ссылка на фото:" : "Ссылка на стикер (GIF/PNG):");
-            if(url) sendMsg(null, url);
-        }
-
-        function postStory() {
-            const url = prompt("Ссылка на картинку сторис:");
-            if(url) db.ref('stories').push({ u: me.nick, i: url, ts: Date.now() });
-        }
-
-        function loadStories() {
-            db.ref('stories').on('value', s => {
-                const l = document.getElementById('st-list'); l.innerHTML = "";
-                s.forEach(c => {
-                    l.innerHTML += `<div class="st-item" onclick="alert('История от ${c.val().u}')"><div class="st-inner"><img src="${c.val().i}"></div></div>`;
-                });
-            });
-        }
-
-        function createGroup() {
-            const name = document.getElementById('g-name').value.trim();
-            if(name) {
-                db.ref('groups').push({ name, owner: me.user });
-                closeModals();
+            const snap = await db.ref('u_list/' + user).once('value');
+            if(snap.exists()) {
+                document.getElementById('err-text').style.display = 'block';
+            } else {
+                myData = { nick, user: '@'+user, prem: false };
+                await db.ref('u_list/' + user).set(myData);
+                localStorage.setItem('sm_data', JSON.stringify(myData));
+                location.reload();
             }
         }
 
-        function loadGroups() {
-            db.ref('groups').on('value', s => {
-                const list = document.getElementById('chat-list-dyn'); list.innerHTML = "";
-                s.forEach(c => {
-                    const d = c.val();
-                    list.innerHTML += `
-                        <div class="chat-row" onclick="openRoom('${c.key}', '${d.name}')">
-                            <div class="ava">${d.name[0]}</div>
-                            <div style="flex:1"><div style="font-weight:bold">${d.name}</div><div style="font-size:12px; color:var(--gray)">Группа</div></div>
-                        </div>`;
-                });
-            });
+        function initMain() {
+            document.getElementById('my-name').innerText = myData.nick;
+            document.getElementById('my-handle').innerText = myData.user;
+            document.getElementById('my-ava').innerText = myData.nick[0].toUpperCase();
+            loadStories();
+            loadMyChats();
         }
 
-        function searchUsers() {
-            const q = document.getElementById('search-in').value.toLowerCase().replace('@','');
-            if(q.length < 2) return;
-            db.ref('users').orderByKey().startAt(q).endAt(q+"\uf8ff").once('value', s => {
-                const list = document.getElementById('chat-list-dyn');
-                list.innerHTML = "<div style='padding:10px; font-size:12px; color:var(--blue)'>Люди:</div>";
-                s.forEach(c => {
-                    const u = c.val();
-                    if(u.user !== me.user) {
+        // --- ПОИСК И ЛИЧНЫЕ ЧАТЫ ---
+        function searchEngine() {
+            const query = document.getElementById('search-input').value.toLowerCase().replace('@','');
+            if(query.length < 2) return;
+            
+            db.ref('u_list').orderByKey().startAt(query).endAt(query+"\uf8ff").once('value', s => {
+                const list = document.getElementById('dynamic-list');
+                list.innerHTML = "<div style='padding:10px; font-size:12px; color:var(--blue)'>Результаты поиска:</div>";
+                s.forEach(child => {
+                    const u = child.val();
+                    if(u.user !== myData.user) {
                         list.innerHTML += `
-                        <div class="chat-row" onclick="openRoom('priv_${u.user.replace('@','')}', '${u.nick}')">
-                            <div class="ava ${u.prem?'premium-border':''}">${u.nick[0]}${u.prem?'<span class="crown">👑</span>':''}</div>
-                            <div style="flex:1"><b>${u.nick}</b><br><small>${u.user}</small></div>
+                        <div class="chat-card" onclick="startPrivate('${u.user}')">
+                            <div class="avatar">${u.nick[0]}</div>
+                            <div class="card-body"><b>${u.nick}</b><br><small>${u.user}</small></div>
                         </div>`;
                     }
                 });
             });
         }
 
-        function buyPremium() {
-            me.prem = true;
-            localStorage.setItem('sm_me', JSON.stringify(me));
-            db.ref('users/' + me.user.replace('@','')).update({prem: true});
-            alert("Поздравляем! Ты теперь Премиум 💎");
+        function startPrivate(targetUser) {
+            // Создаем уникальный ID для ЛС (сортируем имена, чтобы ID был один для двоих)
+            const ids = [myData.user.replace('@',''), targetUser.replace('@','')].sort();
+            const roomId = `priv_${ids[0]}_${ids[1]}`;
+            openRoom(roomId, targetUser);
+        }
+
+        function openRoom(id, title) {
+            activeChatId = id;
+            document.getElementById('chat-target-name').innerText = title;
+            document.getElementById('chat-win').classList.add('active');
+            syncMessages();
+        }
+
+        function closeRoom() { 
+            document.getElementById('chat-win').classList.remove('active'); 
+            db.ref('msgs/' + activeChatId).off();
+        }
+
+        // --- СООБЩЕНИЯ, ФОТО, ГС ---
+        function sendText(audio = null, img = null) {
+            const input = document.getElementById('msg-input');
+            if(!input.value && !audio && !img) return;
+            
+            db.ref('msgs/' + activeChatId).push({
+                u: myData.nick,
+                usr: myData.user,
+                m: input.value,
+                a: audio,
+                i: img,
+                t: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+            });
+            input.value = "";
+        }
+
+        function syncMessages() {
+            db.ref('msgs/' + activeChatId).on('value', s => {
+                const box = document.getElementById('msg-list');
+                box.innerHTML = "";
+                s.forEach(c => {
+                    const d = c.val();
+                    const isMe = d.usr === myData.user;
+                    let body = d.m ? `<div>${d.m}</div>` : "";
+                    if(d.i) body = `<img src="${d.i}" onclick="window.open('${d.i}')">`;
+                    if(d.a) body = `<div onclick="new Audio('${d.a}').play()" style="cursor:pointer">🎤 Голосовое сообщение (▶)</div>`;
+                    
+                    box.innerHTML += `
+                        <div class="bubble ${isMe?'mine':'theirs'}">
+                            ${!isMe ? `<small style="font-weight:bold;color:var(--blue)">${d.u}</small>` : ''}
+                            ${body}
+                            <div class="timestamp">${d.t}</div>
+                        </div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        // РАБОТА С ГАЛЕРЕЕЙ
+        function handleImage(input) {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => sendText(null, e.target.result);
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // РАБОТА С ГС
+        async function recStart() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                recorder = new MediaRecorder(stream);
+                audioChunks = [];
+                document.getElementById('mic-btn').classList.add('rec-now');
+                recorder.ondataavailable = e => audioChunks.push(e.data);
+                recorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const r = new FileReader();
+                    r.readAsDataURL(blob);
+                    r.onloadend = () => sendText(r.result);
+                };
+                recorder.start();
+            } catch(e) { alert("Микрофон недоступен!"); }
+        }
+
+        function recStop() {
+            if(recorder) {
+                recorder.stop();
+                document.getElementById('mic-btn').classList.remove('rec-now');
+            }
+        }
+
+        // --- ПРОЧЕЕ ---
+        function toggleProfile() { document.getElementById('profile-win').classList.toggle('active'); }
+
+        function postStory(url) {
+            db.ref('stories').push({ u: myData.nick, img: url, ts: Date.now() });
+        }
+
+        function addMyStory() {
+            const url = prompt("Вставь ссылку на картинку для истории:");
+            if(url) postStory(url);
+        }
+
+        function loadStories() {
+            db.ref('stories').on('value', s => {
+                const f = document.getElementById('stories-feed'); f.innerHTML = "";
+                s.forEach(c => {
+                    f.innerHTML += `<div class="st-ring"><div class="st-img"><img src="${c.val().img}"></div></div>`;
+                });
+            });
+        }
+
+        function getPremium() {
+            alert("Премиум активирован! (Тестовый режим)");
+            myData.prem = true;
+            localStorage.setItem('sm_data', JSON.stringify(myData));
             location.reload();
         }
 
-        function openProfile() {
-            alert(`Твой профиль:\nИмя: ${me.nick}\nЮзер: ${me.user}\nСтатус: ${me.prem ? 'PREMIUM 💎' : 'Обычный'}`);
-        }
-
-        document.getElementById('m-in').onkeydown = e => { if(e.key === 'Enter') sendMsg(); };
+        document.getElementById('msg-input').onkeydown = e => { if(e.key==='Enter') sendText(); };
     </script>
 </body>
-</html>
+</html> 
