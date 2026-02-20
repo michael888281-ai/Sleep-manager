@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sleep God Mode</title>
+    <title>Sleep Universe v2.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
@@ -11,248 +11,237 @@
             --accent: #0088cc; --bg: #f0f2f5; --card: #ffffff; --text: #000000;
             --sub: #8e8e93; --border: #e5e5ea; --msg-in: #ffffff; --msg-out: #effdde;
             --ghost: #9c27b0; --danger: #ff3b30; --tg-green: #34c759;
-            --panel: rgba(255, 255, 255, 0.85);
+            --panel: rgba(255, 255, 255, 0.9);
             --chat-bg: #e5ddd5 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
         }
-
         body.dark {
             --bg: #0e1621; --card: #17212b; --text: #ffffff; --sub: #8b949e;
             --accent: #2b5278; --border: #0b1118; --msg-in: #182533; --msg-out: #2b5278;
-            --panel: rgba(23, 33, 43, 0.9);
+            --panel: rgba(23, 33, 43, 0.9); --chat-bg: #0e1621;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; transition: 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen, ubuntu, cantarell, "Open Sans", "Helvetica Neue", sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
 
-        /* SCREENS */
-        .screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; transform: translateX(100%); display: flex; flex-direction: column; visibility: hidden; }
+        /* --- UI COMPONENTS --- */
+        .screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; transform: translateX(100%); display: flex; flex-direction: column; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); visibility: hidden; }
         .screen.active { transform: translateX(0); visibility: visible; }
         .screen.bottom { transform: translateY(100%); }
         .screen.bottom.active { transform: translateY(0); }
 
-        /* HEADER */
-        header { height: 65px; background: var(--panel); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; position: sticky; top: 0; z-index: 500; }
-        .h-title { flex: 1; font-size: 24px; font-weight: 900; background: linear-gradient(45deg, var(--accent), #9c27b0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .h-ico { font-size: 24px; color: var(--sub); cursor: pointer; margin-left: 20px; }
-        .h-ico.active { color: var(--ghost); filter: drop-shadow(0 0 5px var(--ghost)); }
+        header { height: 60px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; flex-shrink: 0; }
+        .h-title { flex: 1; font-size: 20px; font-weight: 800; color: var(--accent); }
+        .h-ico { font-size: 22px; color: var(--sub); cursor: pointer; margin-left: 15px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }
+        .h-ico:active { background: rgba(0,0,0,0.05); }
 
-        /* STORIES */
-        .st-bar { display: flex; overflow-x: auto; padding: 15px; gap: 15px; background: var(--card); border-bottom: 1px solid var(--border); scrollbar-width: none; }
-        .st-bar::-webkit-scrollbar { display: none; }
-        .st-item { flex-shrink: 0; width: 68px; text-align: center; font-size: 11px; font-weight: 600; }
-        .st-ring { width: 64px; height: 64px; border-radius: 22px; border: 2.5px solid var(--accent); padding: 2px; margin-bottom: 5px; position: relative; }
-        .st-ring img { width: 100%; height: 100%; border-radius: 18px; object-fit: cover; }
-        .st-add { position: absolute; bottom: -2px; right: -2px; width: 22px; height: 22px; background: var(--accent); color: white; border: 2px solid var(--card); border-radius: 50%; font-weight: bold; }
+        /* --- STORIES --- */
+        .st-container { display: flex; overflow-x: auto; padding: 15px; gap: 12px; background: var(--card); border-bottom: 1px solid var(--border); scrollbar-width: none; }
+        .st-container::-webkit-scrollbar { display: none; }
+        .st-item { flex-shrink: 0; width: 66px; text-align: center; font-size: 11px; font-weight: 500; }
+        .st-ring { width: 62px; height: 62px; border-radius: 20px; border: 2.5px solid var(--accent); padding: 2px; margin-bottom: 4px; position: relative; }
+        .st-ring img { width: 100%; height: 100%; border-radius: 16px; object-fit: cover; }
+        .st-add { position: absolute; bottom: -2px; right: -2px; width: 20px; height: 20px; background: var(--accent); color: white; border: 2px solid var(--card); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
 
-        /* PLACARDS */
-        .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
-        .placard { padding: 15px; border-radius: 20px; background: #fff !important; color: #000 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(0,0,0,0.02); }
-        .p-ico { font-size: 22px; width: 40px; height: 40px; background: #f0f7ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        /* --- CHAT LIST --- */
+        #chat-scroller { flex: 1; overflow-y: auto; background: var(--card); }
+        .chat-row { display: flex; padding: 10px 16px; gap: 12px; border-bottom: 0.5px solid var(--border); cursor: pointer; position: relative; overflow: hidden; }
+        .chat-row:active { background: var(--bg); }
+        .ava { width: 54px; height: 54px; border-radius: 18px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; flex-shrink: 0; }
+        .c-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .c-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+        .c-name { font-weight: 700; font-size: 16px; color: var(--text); }
+        .c-time { font-size: 12px; color: var(--sub); }
+        .c-last { font-size: 14px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* CHATS */
-        #chat-list { flex: 1; overflow-y: auto; background: var(--card); }
-        .chat-card { display: flex; padding: 12px 15px; gap: 12px; border-bottom: 0.5px solid var(--border); cursor: pointer; }
-        .ava { width: 54px; height: 54px; border-radius: 20px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; flex-shrink: 0; }
-        .c-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-        .c-row { display: flex; justify-content: space-between; align-items: center; }
-        .c-name { font-weight: 700; font-size: 17px; }
-        .c-msg { font-size: 14px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* --- SEARCH --- */
+        #search-box { padding: 10px 15px; background: var(--card); border-bottom: 1px solid var(--border); }
+        .search-input { width: 100%; padding: 10px 15px; border-radius: 12px; border: none; background: var(--bg); color: var(--text); font-size: 15px; }
 
-        /* CHAT ENGINE */
-        #msg-engine { flex: 1; overflow-y: auto; padding: 15px; background: var(--chat-bg); background-size: cover; display: flex; flex-direction: column; gap: 8px; }
-        .bubble { padding: 10px 14px; border-radius: 18px; max-width: 80%; font-size: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        /* --- CHAT VIEW --- */
+        #msg-box { flex: 1; overflow-y: auto; padding: 15px; background: var(--chat-bg); display: flex; flex-direction: column; gap: 8px; }
+        .bubble { padding: 8px 12px; border-radius: 16px; max-width: 75%; font-size: 15px; line-height: 1.4; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
         .bubble.in { align-self: flex-start; background: var(--msg-in); border-bottom-left-radius: 4px; }
         .bubble.out { align-self: flex-end; background: var(--msg-out); border-bottom-right-radius: 4px; }
-        .v-msg { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+        .b-time { font-size: 10px; color: var(--sub); margin-top: 4px; text-align: right; }
 
-        /* INPUT */
-        .input-bar { background: var(--panel); backdrop-filter: blur(15px); padding: 10px 15px 30px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-        .field { flex: 1; background: var(--bg); border-radius: 20px; padding: 10px 15px; border: 1px solid var(--border); color: var(--text); font-size: 16px; max-height: 100px; resize: none; }
-        .send-btn { width: 44px; height: 44px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        /* --- INPUT --- */
+        .input-bar { background: var(--card); padding: 8px 12px 30px; border-top: 1px solid var(--border); display: flex; align-items: flex-end; gap: 8px; }
+        .field-wrap { flex: 1; background: var(--bg); border-radius: 20px; padding: 5px 12px; border: 1px solid var(--border); }
+        .field { width: 100%; border: none; background: transparent; color: var(--text); font-size: 15px; padding: 8px 0; resize: none; max-height: 120px; }
+        .btn-circle { width: 40px; height: 40px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+        .rec-active { background: var(--danger); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* CALL UI */
-        #call-screen { background: #000; z-index: 5000; }
-        #remote-vid { width: 100%; height: 100%; object-fit: cover; }
-        #local-vid { position: absolute; top: 30px; right: 20px; width: 100px; height: 140px; border-radius: 15px; border: 2px solid #fff; object-fit: cover; z-index: 10; }
-        .call-controls { position: absolute; bottom: 60px; left: 0; right: 0; display: flex; justify-content: center; gap: 40px; }
-        .btn-hangup { width: 70px; height: 70px; background: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white; cursor: pointer; box-shadow: 0 0 20px rgba(255,59,48,0.5); }
+        /* --- CALL SYSTEM --- */
+        #call-layer { background: #000; z-index: 5000; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px; }
+        #remote-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        #local-video { position: absolute; top: 20px; right: 20px; width: 100px; height: 140px; border-radius: 12px; border: 2px solid #fff; object-fit: cover; z-index: 10; }
+        .call-info { position: relative; z-index: 5; text-align: center; color: white; }
+        .call-actions { position: relative; z-index: 5; display: flex; justify-content: center; gap: 30px; }
+        .hangup { width: 65px; height: 65px; background: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 
-        footer { height: 75px; background: var(--panel); border-top: 1px solid var(--border); display: flex; padding-bottom: 15px; position: fixed; bottom: 0; width: 100%; }
-        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--sub); cursor: pointer; font-weight: bold; }
+        /* --- AUTH --- */
+        #auth-layer { position: fixed; inset: 0; background: var(--card); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+        .auth-logo { width: 80px; height: 80px; background: var(--accent); border-radius: 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; }
+
+        footer { height: 70px; background: var(--card); border-top: 1px solid var(--border); display: flex; padding-bottom: 10px; }
+        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--sub); cursor: pointer; }
         .tab.active { color: var(--accent); }
-        .tab b { font-size: 24px; margin-bottom: 2px; }
-
-        /* BOT BUILDER */
-        .bot-card { background: var(--card); margin: 15px; padding: 20px; border-radius: 20px; border: 1.5px dashed var(--accent); }
-
-        #auth-layer { position: fixed; inset: 0; background: var(--card); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        .tab b { font-size: 22px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
     <div id="auth-layer">
         <div class="auth-logo">💤</div>
-        <h1 style="margin:0;">Sleep God Mode</h1>
-        <p style="color:var(--sub); margin-bottom:30px;">Вход в гипер-мессенджер</p>
-        <input type="text" id="reg-n" class="field" style="width:100%; max-width:300px; margin-bottom:10px;" placeholder="Ваше имя">
-        <input type="text" id="reg-u" class="field" style="width:100%; max-width:300px; margin-bottom:20px;" placeholder="@username">
-        <button class="send-btn" style="width:100%; max-width:300px; border-radius:15px; font-weight:bold;" onclick="god.reg()">Начать</button>
+        <h2 style="margin:0 0 10px 0;">Sleep Universe</h2>
+        <p style="color:var(--sub); margin-bottom:25px;">Введите данные для входа</p>
+        <input type="text" id="reg-n" class="search-input" style="max-width:300px; margin-bottom:10px;" placeholder="Имя">
+        <input type="text" id="reg-u" class="search-input" style="max-width:300px; margin-bottom:20px;" placeholder="@username">
+        <button class="btn-circle" style="width:100%; max-width:300px; border-radius:12px; font-weight:bold;" onclick="app.register()">Начать общение</button>
     </div>
 
     <header>
         <div class="h-title">Sleep</div>
-        <div class="h-ico" id="ghost-trigger" onclick="god.toggleGhost()">👻</div>
-        <div class="h-ico" onclick="god.open('scr-search')">🔍</div>
+        <div class="h-ico" onclick="app.open('scr-search')">🔍</div>
+        <div class="h-ico" id="gh-trigger" onclick="app.toggleGhost()">👻</div>
     </header>
 
-    <div id="main-view" style="flex:1; overflow-y:auto; padding-bottom:100px;">
-        <div class="st-bar">
-            <div class="st-item" onclick="document.getElementById('st-file').click()">
-                <div class="st-ring" style="border-color:var(--border);"><div class="st-add">+</div><img src="https://via.placeholder.com/150" id="my-st-thumb"></div>
-                Моя история
-                <input type="file" id="st-file" hidden onchange="god.upStory(this)">
-            </div>
-            <div id="st-feed" style="display:flex; gap:15px;"></div>
+    <div id="st-feed" class="st-container">
+        <div class="st-item" onclick="document.getElementById('st-up').click()">
+            <div class="st-ring" style="border-color:var(--border);"><div class="st-add">+</div><img src="https://via.placeholder.com/150" id="my-st"></div>
+            Моя история
+            <input type="file" id="st-up" hidden onchange="app.uploadStory(this)">
         </div>
-
-        <div class="p-grid">
-            <div class="placard" onclick="god.open('scr-new-chan')">
-                <div class="p-ico">🛰️</div>
-                <b>Канал</b>
-            </div>
-            <div class="placard" onclick="god.open('scr-bot')">
-                <div class="p-ico">🤖</div>
-                <b>Бот</b>
-            </div>
-        </div>
-
-        <div id="chat-list"></div>
+        <div id="other-stories" style="display:flex; gap:12px;"></div>
     </div>
 
+    <div id="chat-scroller"></div>
+
     <footer>
-        <div class="tab active" onclick="god.home()"><b>💬</b>Чаты</div>
-        <div class="tab" onclick="god.open('scr-settings')"><b>⚙️</b>Настройки</div>
+        <div class="tab active" onclick="app.closeAll()"><b>💬</b>Чаты</div>
+        <div class="tab" onclick="app.open('scr-chan')"><b>🛰️</b>Каналы</div>
+        <div class="tab" onclick="app.open('scr-bot')"><b>🤖</b>Боты</div>
+        <div class="tab" onclick="app.open('scr-set')"><b>⚙️</b>Настройки</div>
     </footer>
+
+    <div id="scr-search" class="screen">
+        <header>
+            <div class="h-ico" style="margin:0 15px 0 0;" onclick="app.closeAll()">←</div>
+            <input type="text" id="sq" class="search-input" placeholder="Поиск @username..." oninput="app.searchUser()">
+        </header>
+        <div id="search-res" style="flex:1; overflow-y:auto;"></div>
+    </div>
 
     <div id="scr-chat" class="screen">
         <header>
-            <div class="h-ico" style="margin:0 15px 0 0;" onclick="god.home()">←</div>
-            <div class="ava" id="v-ava" style="width:40px; height:40px; font-size:16px;">?</div>
+            <div class="h-ico" style="margin:0 10px 0 0;" onclick="app.closeChat()">←</div>
+            <div class="ava" id="v-ava" style="width:38px; height:38px; font-size:16px;">?</div>
             <div style="flex:1; margin-left:12px;">
-                <div id="v-name" style="font-weight:700;">Username</div>
+                <div id="v-name" style="font-weight:700;">Name</div>
                 <div id="v-stat" style="font-size:11px; color:var(--tg-green);">онлайн</div>
             </div>
-            <div class="h-ico" onclick="god.call(true)">📞</div>
+            <div class="h-ico" onclick="app.startCall(true)">📞</div>
         </header>
-        <div id="msg-engine"></div>
+        <div id="msg-box"></div>
         <div class="input-bar">
-            <div class="h-ico" style="margin:0 5px 0 0;">📎<input type="file" hidden onchange="god.sendImg(this)"></div>
-            <textarea id="f-text" class="field" rows="1" placeholder="Сообщение..."></textarea>
-            <div class="h-ico" id="mic-trigger" onclick="god.toggleGS()">🎤</div>
-            <div class="send-btn" onclick="god.send()">➤</div>
+            <div class="h-ico" style="margin:0 5px 4px 0;">📎<input type="file" hidden onchange="app.sendImg(this)"></div>
+            <div class="field-wrap">
+                <textarea id="f-area" class="field" rows="1" placeholder="Сообщение..." oninput="app.autoHeight(this)"></textarea>
+            </div>
+            <div class="h-ico" id="mic-btn" onclick="app.toggleGS()">🎤</div>
+            <div class="btn-circle" onclick="app.send()">➤</div>
         </div>
     </div>
 
     <div id="scr-call" class="screen bottom">
-        <video id="remote-vid" autoplay playsinline></video>
-        <video id="local-vid" autoplay playsinline muted></video>
-        <div id="call-status" style="position:absolute; top:100px; width:100%; text-align:center; color:white; font-size:20px;">Вызов...</div>
-        <div class="call-controls">
-            <div class="btn-hangup" onclick="god.endCall()">📞</div>
-        </div>
-    </div>
-
-    <div id="scr-bot" class="screen bottom">
-        <header><div class="h-ico" onclick="god.home()">✕</div><b>Конструктор ботов</b><div></div></header>
-        <div style="padding:20px;">
-            <div class="bot-card">
-                <h3>Создать бота</h3>
-                <input type="text" id="bot-n" class="field" style="width:100%; margin-bottom:10px;" placeholder="Имя бота (напр. Эхо-бот)">
-                <textarea id="bot-r" class="field" style="width:100%; height:80px;" placeholder="Что бот отвечает на любое сообщение?"></textarea>
-                <button class="send-btn" style="width:100%; margin-top:15px; border-radius:12px;" onclick="god.createBot()">Запустить бота</button>
+        <div id="call-layer">
+            <video id="remote-video" autoplay playsinline></video>
+            <video id="local-video" autoplay playsinline muted></video>
+            <div class="call-info">
+                <h2 id="call-name">Вызов...</h2>
+                <div id="call-dur">00:00</div>
+            </div>
+            <div class="call-actions">
+                <div class="hangup" onclick="app.endCall()">📞</div>
             </div>
         </div>
     </div>
 
-    <div id="scr-new-chan" class="screen bottom">
-        <header><div class="h-ico" onclick="god.home()">✕</div><b>Новый канал</b><div></div></header>
-        <div style="padding:20px;">
-            <input type="text" id="cn-n" class="field" style="width:100%; margin-bottom:10px;" placeholder="Название канала">
-            <textarea id="cn-d" class="field" style="width:100%; height:100px;" placeholder="Описание канала"></textarea>
-            <button class="send-btn" style="width:100%; margin-top:15px; border-radius:12px;" onclick="god.createChan()">Создать</button>
-        </div>
-    </div>
-
-    <div id="scr-settings" class="screen">
-        <header><div class="h-ico" onclick="god.home()">←</div><b>Настройки</b><div></div></header>
-        <div style="padding:30px; text-align:center;">
-            <div class="ava" id="my-ava" style="width:90px; height:90px; margin:0 auto 15px; font-size:32px;">?</div>
-            <h2 id="my-name">Name</h2>
-            <p id="my-user" style="color:var(--accent);">@user</p>
-            <button class="field" style="width:100%; margin-top:20px;" onclick="god.toggleDark()">Сменить тему</button>
-            <button class="field" style="width:100%; margin-top:10px; color:var(--danger);" onclick="god.logout()">Выйти</button>
-        </div>
-    </div>
+    <div id="scr-chan" class="screen bottom"><header><div class="h-ico" onclick="app.closeAll()">✕</div><b>Создать канал</b></header><div style="padding:20px;"><input id="cn-n" class="search-input" placeholder="Название"><br><br><button class="btn-circle" style="width:100%; border-radius:10px;" onclick="app.createChan()">Создать</button></div></div>
+    <div id="scr-bot" class="screen bottom"><header><div class="h-ico" onclick="app.closeAll()">✕</div><b>Конструктор ботов</b></header><div style="padding:20px;"><input id="bt-n" class="search-input" placeholder="Имя бота"><br><br><textarea id="bt-r" class="search-input" style="height:100px;" placeholder="Ответ бота"></textarea><br><br><button class="btn-circle" style="width:100%; border-radius:10px;" onclick="app.createBot()">Запустить</button></div></div>
+    <div id="scr-set" class="screen"><header><div class="h-ico" onclick="app.closeAll()">←</div><b>Настройки</b></header><div style="padding:20px;"><button class="search-input" onclick="app.toggleDark()">Сменить тему</button><br><br><button class="search-input" style="color:var(--danger)" onclick="app.logout()">Выйти</button></div></div>
 
     <script>
-        // FIREBASE INITIALIZATION
-        const cfg = {
+        const config = {
             apiKey: "AIzaSyDzCviqV3rCSLZL-K8h7n6j7aLGkZEmybM",
             authDomain: "sleep-menager.firebaseapp.com",
             projectId: "sleep-menager",
             databaseURL: "https://sleep-menager-default-rtdb.firebaseio.com"
         };
-        firebase.initializeApp(cfg);
+        firebase.initializeApp(config);
         const db = firebase.database();
 
-        const god = {
-            me: JSON.parse(localStorage.getItem('god_sess')),
-            chat: null, gh: localStorage.getItem('god_gh') === '1',
-            rec: null, chunks: [], pc: null, stream: null,
+        const app = {
+            me: JSON.parse(localStorage.getItem('slp_sess')),
+            chat: null, gh: localStorage.getItem('slp_gh') === '1',
+            pc: null, stream: null, rec: null, chunks: [],
 
             init() {
                 if(this.me) {
                     document.getElementById('auth-layer').remove();
-                    this.syncChats();
+                    this.loadChats();
                     this.syncStories();
                     this.listenCalls();
                     this.updateOnline(true);
-                    this.loadProfile();
-                    if(localStorage.getItem('god_dark') === '1') document.body.classList.add('dark');
+                    if(localStorage.getItem('slp_dark')==='1') document.body.classList.add('dark');
+                    if(this.gh) document.getElementById('gh-trigger').style.color = 'var(--ghost)';
                 }
             },
 
-            async reg() {
-                const n = document.getElementById('reg-n').value, u = document.getElementById('reg-u').value.replace('@','');
-                if(!n || !u) return alert("Заполни данные");
+            async register() {
+                const n = document.getElementById('reg-n').value, u = document.getElementById('reg-u').value.replace('@','').toLowerCase();
+                if(!n || !u) return;
                 this.me = { n, u: '@'+u };
                 await db.ref('u/'+u).set(this.me);
-                localStorage.setItem('god_sess', JSON.stringify(this.me));
+                localStorage.setItem('slp_sess', JSON.stringify(this.me));
                 location.reload();
             },
 
-            loadProfile() {
-                document.getElementById('my-name').innerText = this.me.n;
-                document.getElementById('my-user').innerText = this.me.u;
-                document.getElementById('my-ava').innerText = this.me.n[0];
-                if(this.gh) document.getElementById('ghost-trigger').classList.add('active');
-            },
-
             open(id) { this.closeAll(); document.getElementById(id).classList.add('active'); },
-            home() { this.closeAll(); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab')[0].classList.add('active'); },
             closeAll() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); },
 
-            // CHATS & MSGS
-            syncChats() {
+            // SEARCH
+            searchUser() {
+                const q = document.getElementById('sq').value.replace('@','').toLowerCase();
+                if(q.length < 2) return;
+                db.ref('u/'+q).once('value', s => {
+                    const box = document.getElementById('search-res'); box.innerHTML = "";
+                    if(s.exists()) {
+                        const d = s.val();
+                        box.innerHTML = `<div class="chat-row" onclick="app.addChat('${d.u}','${d.n}')">
+                            <div class="ava">${d.n[0]}</div>
+                            <div class="c-info"><div class="c-name">${d.n}</div><div class="c-last">${d.u}</div></div>
+                        </div>`;
+                    }
+                });
+            },
+
+            addChat(u, n) {
+                db.ref(`rec/${this.me.u.replace('@','')}/${u.replace('@','')}`).set({ u, n });
+                this.openChat(u, n);
+            },
+
+            loadChats() {
                 db.ref('rec/'+this.me.u.replace('@','')).on('value', s => {
-                    const box = document.getElementById('chat-list'); box.innerHTML = "";
+                    const box = document.getElementById('chat-scroller'); box.innerHTML = "";
                     s.forEach(c => {
                         const d = c.val();
-                        box.innerHTML += `<div class="chat-card" onclick="god.openChat('${d.u}','${d.n}',${!!d.isB})">
+                        box.innerHTML += `<div class="chat-row" onclick="app.openChat('${d.u}','${d.n}', ${!!d.isB})">
                             <div class="ava">${d.n[0]}</div>
-                            <div class="c-main">
-                                <div class="c-row"><div class="c-name">${d.n}</div><div class="c-msg" style="font-size:10px;">12:00</div></div>
-                                <div class="c-msg">${d.isB ? 'Автоматический бот' : d.u}</div>
+                            <div class="c-info">
+                                <div class="c-top"><div class="c-name">${d.n}</div><div class="c-time">12:00</div></div>
+                                <div class="c-last">${d.u}</div>
                             </div>
                         </div>`;
                     });
@@ -273,58 +262,58 @@
 
             syncMsgs() {
                 db.ref('m/'+this.chat.id).on('value', s => {
-                    const box = document.getElementById('msg-engine'); box.innerHTML = "";
+                    const box = document.getElementById('msg-box'); box.innerHTML = "";
                     s.forEach(m => {
                         const d = m.val(), isMe = d.f === this.me.u;
                         let html = d.t;
-                        if(d.v) html = `<div class="v-msg" onclick="new Audio('${d.v}').play()">🎤 Голосовое сообщение</div>`;
-                        if(d.i) html = `<img src="${d.i}" width="100%" style="border-radius:12px;">`;
-                        box.innerHTML += `<div class="bubble ${isMe?'out':'in'}">${html}</div>`;
+                        if(d.v) html = `<div onclick="new Audio('${d.v}').play()" style="cursor:pointer">🎤 Голосовое сообщение</div>`;
+                        if(d.i) html = `<img src="${d.i}" style="width:100%; border-radius:10px;">`;
+                        box.innerHTML += `<div class="bubble ${isMe?'out':'in'}">${html}<div class="b-time">12:00</div></div>`;
                     });
                     box.scrollTop = box.scrollHeight;
                 });
             },
 
             send() {
-                const f = document.getElementById('f-text'); if(!f.value.trim()) return;
-                db.ref('m/'+this.chat.id).push({ t: f.value, f: this.me.u, ts: Date.now() });
+                const f = document.getElementById('f-area'); if(!f.value.trim()) return;
+                db.ref('m/'+this.chat.id).push({ t: f.value, f: this.me.u });
                 if(this.chat.isBot) this.botReply(f.value);
-                f.value = "";
+                f.value = ""; f.style.height = 'auto';
             },
 
-            // VOICE MESSAGES (ГС)
+            // VOICE MESSAGES
             async toggleGS() {
-                const btn = document.getElementById('mic-trigger');
+                const btn = document.getElementById('mic-btn');
                 if(!this.rec) {
                     const s = await navigator.mediaDevices.getUserMedia({ audio: true });
                     this.rec = new MediaRecorder(s);
                     this.rec.ondataavailable = e => this.chunks.push(e.data);
                     this.rec.onstop = () => {
-                        const b = new Blob(this.chunks, { type: 'audio/webm' });
+                        const b = new Blob(this.chunks, {type:'audio/webm'});
                         const r = new FileReader();
                         r.onload = () => db.ref('m/'+this.chat.id).push({ v: r.result, f: this.me.u });
                         r.readAsDataURL(b); this.chunks = [];
                     };
-                    this.rec.start(); btn.style.color = 'var(--danger)';
+                    this.rec.start(); btn.classList.add('rec-active');
                 } else {
-                    this.rec.stop(); this.rec = null; btn.style.color = 'var(--sub)';
+                    this.rec.stop(); this.rec = null; btn.classList.remove('rec-active');
                 }
             },
 
-            // VIDEO CALLS (WEBRTC)
-            async call(isOff) {
+            // VIDEO CALLS (WebRTC)
+            async startCall(isOff) {
                 this.open('scr-call');
                 this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('local-vid').srcObject = this.stream;
+                document.getElementById('local-video').srcObject = this.stream;
                 this.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
                 this.stream.getTracks().forEach(t => this.pc.addTrack(t, this.stream));
-                this.pc.ontrack = e => document.getElementById('remote-vid').srcObject = e.streams[0];
+                this.pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
                 
                 const ref = db.ref('calls/'+this.chat.id);
                 if(isOff) {
                     const offer = await this.pc.createOffer();
                     await this.pc.setLocalDescription(offer);
-                    ref.set({ offer, from: this.me.u });
+                    ref.set({ offer, from: this.me.u, n: this.me.n });
                 }
                 
                 this.pc.onicecandidate = e => e.candidate && ref.child('ice').push(e.candidate.toJSON());
@@ -343,63 +332,40 @@
 
             listenCalls() {
                 db.ref('calls').on('child_added', s => {
-                    const d = s.val(); if(d.from !== this.me.u && confirm("Звонок от " + d.from)) {
-                        this.openChat(d.from, d.from); this.call(false);
+                    const d = s.val(); if(d.from !== this.me.u && confirm("Звонок от " + d.n)) {
+                        this.openChat(d.from, d.n); this.startCall(false);
                     }
                 });
             },
 
             endCall() { location.reload(); },
 
-            // STORIES & CHANNELS
-            upStory(inp) {
-                const r = new FileReader();
-                r.onload = e => {
-                    db.ref('st').push({ i: e.target.result, n: this.me.n, f: this.me.u });
-                    document.getElementById('my-st-thumb').src = e.target.result;
-                };
-                r.readAsDataURL(inp.files[0]);
-            },
+            // OTHER
+            autoHeight(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; },
+            toggleGhost() { this.gh = !this.gh; localStorage.setItem('slp_gh', this.gh?'1':'0'); location.reload(); },
+            updateOnline(st) { if(this.me && !this.gh) db.ref('u/'+this.me.u.replace('@','')+'/on').set(st); },
+            toggleDark() { const d = document.body.classList.toggle('dark'); localStorage.setItem('slp_dark', d?'1':'0'); },
+            logout() { localStorage.clear(); location.reload(); },
+            closeChat() { this.closeAll(); db.ref('m/'+this.chat.id).off(); },
 
+            // REPLICATED SYSTEMS
             syncStories() {
                 db.ref('st').on('value', s => {
-                    const f = document.getElementById('st-feed'); f.innerHTML = "";
-                    s.forEach(st => { if(st.val().f !== this.me.u) f.innerHTML += `<div class="st-item"><div class="st-ring"><img src="${st.val().i}"></div>${st.val().n}</div>`; });
+                    const box = document.getElementById('other-stories'); box.innerHTML = "";
+                    s.forEach(st => { if(st.val().f !== this.me.u) box.innerHTML += `<div class="st-item"><div class="st-ring"><img src="${st.val().i}"></div>${st.val().n}</div>`; });
                 });
             },
-
-            createChan() {
-                const n = document.getElementById('cn-n').value; if(!n) return;
-                db.ref(`rec/${this.me.u.replace('@','')}/${n}`).set({ n, u: '#'+n, isC: true });
-                this.home();
-            },
-
-            // BOT LOGIC
-            createBot() {
-                const n = document.getElementById('bot-n').value, r = document.getElementById('bot-r').value;
-                if(!n) return;
-                db.ref(`rec/${this.me.u.replace('@','')}/${n}`).set({ n, u: '@'+n, isB: true, reply: r });
-                this.home();
-            },
-
-            botReply(msg) {
-                db.ref(`rec/${this.me.u.replace('@','')}/${this.chat.n}/reply`).once('value', s => {
-                    setTimeout(() => {
-                        db.ref('m/'+this.chat.id).push({ t: s.val() || "Я работаю!", f: '@'+this.chat.n });
-                    }, 1000);
-                });
-            },
-
-            // UTILS
-            toggleGhost() { this.gh = !this.gh; localStorage.setItem('god_gh', this.gh?'1':'0'); location.reload(); },
-            updateOnline(st) { if(this.me && !this.gh) db.ref('u/'+this.me.u.replace('@','')+'/on').set(st); },
-            toggleDark() { const d = document.body.classList.toggle('dark'); localStorage.setItem('god_dark', d?'1':'0'); },
-            logout() { localStorage.clear(); location.reload(); }
+            uploadStory(inp) {
+                const r = new FileReader(); r.onload = e => {
+                    db.ref('st').push({ i: e.target.result, n: this.me.n, f: this.me.u });
+                    document.getElementById('my-st').src = e.target.result;
+                }; r.readAsDataURL(inp.files[0]);
+            }
         };
 
-        god.init();
-        window.onblur = () => god.updateOnline(false);
-        window.onfocus = () => god.updateOnline(true);
+        app.init();
+        window.onfocus = () => app.updateOnline(true);
+        window.onblur = () => app.updateOnline(false);
     </script>
 </body>
-                                                                                                </html>
+</html>
