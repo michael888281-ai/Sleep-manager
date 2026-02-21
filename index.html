@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sleep Messenger | Gold Edition</title>
+    <title>Sleep OS 27 | God Mode</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -11,379 +11,450 @@
 
     <style>
         :root {
-            --p: #0A84FF;
-            --bg: #f2f2f7;
-            --glass: rgba(255, 255, 255, 0.8);
-            --border: rgba(0, 0, 0, 0.1);
-            --text: #000;
-            --text-m: #8e8e93;
-            --blur: blur(30px) saturate(200%);
-            --radius: 20px;
+            --p: #0A84FF; --bg: #000; --glass: rgba(28, 28, 30, 0.7);
+            --border: rgba(255, 255, 255, 0.1); --text: #fff; --text-m: #8e8e93;
+            --blur: blur(50px) saturate(210%);
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; user-select: none; }
 
-        [data-theme="dark"] {
-            --bg: #000;
-            --glass: rgba(28, 28, 30, 0.8);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #fff;
-            --text-m: #98989d;
-        }
+        /* Системные слои */
+        .view { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg); z-index: 10; }
+        .view.active { display: flex; animation: viewIn 0.3s cubic-bezier(0.1, 0.8, 0.2, 1); }
+        @keyframes viewIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
-
-        /* Анимации */
-        .view { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--bg); z-index: 10; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .view.active { display: flex; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* Шапка iOS */
+        /* Header iOS 27 */
         header {
             padding-top: env(safe-area-inset-top);
-            background: var(--glass);
-            backdrop-filter: var(--blur);
-            border-bottom: 0.5px solid var(--border);
+            background: var(--glass); backdrop-filter: var(--blur);
             display: flex; align-items: center; justify-content: space-between;
-            padding-inline: 20px; height: calc(65px + env(safe-area-inset-top));
-            position: sticky; top: 0; z-index: 100;
+            padding-inline: 20px; height: calc(75px + env(safe-area-inset-top));
+            border-bottom: 0.5px solid var(--border); z-index: 100;
         }
-        .h-title { font-weight: 700; font-size: 20px; letter-spacing: -0.5px; }
-        .h-btn { color: var(--p); font-size: 17px; cursor: pointer; border: none; background: none; font-weight: 500; }
+        .h-title { font-weight: 800; font-size: 24px; letter-spacing: -1px; }
+        .h-sub { font-size: 12px; color: var(--p); font-weight: 500; }
 
-        /* Скролл и Списки */
-        .scroller { flex: 1; overflow-y: auto; padding-bottom: 100px; }
-        .list-item {
-            display: flex; align-items: center; gap: 15px; padding: 12px 20px;
-            border-bottom: 0.5px solid var(--border); cursor: pointer;
-        }
-        .list-item:active { background: rgba(0,0,0,0.05); }
-        .avatar {
-            width: 56px; height: 56px; border-radius: 50%;
-            background: linear-gradient(135deg, #0A84FF, #5E5CE6);
-            color: #fff; display: flex; align-items: center; justify-content: center;
-            font-size: 22px; font-weight: 700; flex-shrink: 0;
-        }
-        .item-info { flex: 1; }
-        .item-name { font-weight: 600; font-size: 17px; margin-bottom: 2px; }
-        .item-meta { font-size: 14px; color: var(--text-m); }
+        /* Сториз */
+        .stories-bar { display: flex; gap: 15px; padding: 15px 20px; overflow-x: auto; border-bottom: 0.5px solid var(--border); scrollbar-width: none; }
+        .stories-bar::-webkit-scrollbar { display: none; }
+        .story-node { flex-shrink: 0; text-align: center; width: 65px; }
+        .story-ring { width: 65px; height: 65px; border-radius: 50%; padding: 3px; border: 2px solid var(--p); margin-bottom: 5px; }
+        .story-av { width: 100%; height: 100%; border-radius: 50%; background: #1c1c1e; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-        /* Поиск */
-        .search-container { padding: 10px 15px; background: var(--bg); }
-        .search-input {
-            width: 100%; padding: 12px 15px; border-radius: 12px;
-            border: none; background: rgba(0,0,0,0.06); font-size: 16px; outline: none;
-        }
-        [data-theme="dark"] .search-input { background: rgba(255,255,255,0.1); color: #fff; }
+        /* Списки */
+        .scroller { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+        .item { display: flex; align-items: center; gap: 15px; padding: 16px 20px; border-bottom: 0.5px solid var(--border); transition: 0.2s; }
+        .item:active { background: #1c1c1e; }
+        .av { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #222, #000); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; position: relative; }
+        .online-mark { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #34C759; border-radius: 50%; border: 2px solid #000; }
 
-        /* Чат */
-        .chat-wall { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .bubble { max-width: 75%; padding: 10px 16px; border-radius: 20px; font-size: 16px; position: relative; line-height: 1.4; }
-        .bubble.sent { align-self: flex-end; background: var(--p); color: #fff; border-bottom-right-radius: 4px; }
-        .bubble.received { align-self: flex-start; background: var(--glass); border: 0.5px solid var(--border); border-bottom-left-radius: 4px; }
+        /* Chat */
+        .wall { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background-attachment: fixed; }
+        .b-wrap { display: flex; flex-direction: column; max-width: 80%; }
+        .b-wrap.s { align-self: flex-end; }
+        .b-wrap.r { align-self: flex-start; }
         
-        .chat-bar {
-            padding: 10px 15px calc(15px + env(safe-area-inset-bottom));
-            background: var(--glass); backdrop-filter: var(--blur);
-            display: flex; align-items: flex-end; gap: 12px; border-top: 0.5px solid var(--border);
-        }
-        .input-area {
-            flex: 1; background: rgba(0,0,0,0.05); border-radius: 20px;
-            padding: 10px 15px; max-height: 150px; overflow-y: auto; outline: none; font-size: 16px;
-        }
+        .bubble { padding: 12px 16px; border-radius: 20px; font-size: 16px; line-height: 1.4; position: relative; transition: 0.2s; }
+        .s .bubble { background: var(--p); color: #fff; border-bottom-right-radius: 4px; }
+        .r .bubble { background: #262629; border-bottom-left-radius: 4px; }
+        .b-meta { font-size: 10px; margin-top: 4px; color: var(--text-m); display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+        
+        .bubble img { width: 100%; border-radius: 12px; margin-bottom: 5px; display: block; }
+        .deleted { font-style: italic; opacity: 0.6; }
 
-        /* Рега норм */
-        #v-auth { z-index: 10000; justify-content: center; align-items: center; padding: 40px; }
-        .auth-form { width: 100%; max-width: 320px; }
-        .a-input {
-            width: 100%; padding: 18px; border-radius: 16px; border: 1px solid var(--border);
-            margin-bottom: 12px; font-size: 17px; text-align: center; background: var(--glass);
-        }
-        .a-btn {
-            width: 100%; padding: 18px; border-radius: 16px; border: none;
-            background: var(--p); color: #fff; font-weight: 700; font-size: 17px;
-            cursor: pointer; box-shadow: 0 10px 20px rgba(10, 132, 255, 0.2);
-        }
-        .a-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Controls */
+        .bar { padding: 12px 16px calc(20px + env(safe-area-inset-bottom)); background: var(--glass); backdrop-filter: var(--blur); display: flex; align-items: flex-end; gap: 12px; border-top: 0.5px solid var(--border); }
+        .in-box { flex: 1; background: #1c1c1e; border-radius: 22px; padding: 12px 18px; max-height: 150px; overflow-y: auto; outline: none; font-size: 16px; }
+        .btn-act { font-size: 26px; color: var(--p); background: none; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-act:active { transform: scale(0.9); }
 
-        /* Навигация */
-        nav {
-            position: fixed; bottom: 0; width: 100%; height: calc(65px + env(safe-area-inset-bottom));
-            background: var(--glass); backdrop-filter: var(--blur);
-            display: flex; border-top: 0.5px solid var(--border); z-index: 90;
-        }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-m); gap: 4px; }
-        .nav-item.active { color: var(--p); }
-        .nav-item i { font-size: 22px; }
-        .nav-item span { font-size: 10px; font-weight: 600; }
+        /* UI Overlays */
+        #call-ui { z-index: 5000; background: radial-gradient(circle at top, #1c1c1e, #000); align-items: center; justify-content: space-around; padding: 100px 20px; }
+        .call-info { text-align: center; }
+        .call-av-big { width: 140px; height: 140px; border-radius: 50%; background: var(--p); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 50px; box-shadow: 0 0 50px rgba(10,132,255,0.3); }
 
-        /* Профиль */
-        .profile-header { padding: 40px 20px; text-align: center; }
-        .p-avatar { width: 100px; height: 100px; border-radius: 50%; background: var(--p); color: #fff; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; }
+        /* Context Menu (Edit/Delete) */
+        #ctx-menu { position: fixed; background: var(--glass); backdrop-filter: var(--blur); border: 1px solid var(--border); border-radius: 15px; padding: 8px; z-index: 2000; display: none; min-width: 150px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .ctx-item { padding: 12px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .ctx-item:active { background: rgba(255,255,255,0.1); }
+
+        /* Nav */
+        nav { position: fixed; bottom: 0; width: 100%; height: calc(75px + env(safe-area-inset-bottom)); background: var(--glass); backdrop-filter: var(--blur); display: flex; border-top: 0.5px solid var(--border); z-index: 90; }
+        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-m); gap: 4px; }
+        .tab.active { color: var(--p); }
+        .tab i { font-size: 22px; } .tab span { font-size: 10px; font-weight: 600; }
+
+        [contenteditable]:empty:before { content: attr(data-placeholder); color: #555; }
     </style>
 </head>
 <body>
 
-    <div id="v-auth" class="view">
-        <div class="auth-form">
-            <div style="font-size: 80px; margin-bottom: 20px;">☁️</div>
-            <h1 style="margin-bottom: 8px;">Sleep OS 27</h1>
-            <p style="color: var(--text-m); margin-bottom: 30px;">Введите данные для входа</p>
-            <input type="text" id="reg-name" class="a-input" placeholder="Ваше имя">
-            <input type="text" id="reg-user" class="a-input" placeholder="@username (ник)">
-            <button id="reg-btn" class="a-btn" onclick="Core.register()">Создать аккаунт</button>
-            <p id="auth-error" style="color: #ff3b30; font-size: 14px; margin-top: 15px; display: none;"></p>
+    <div id="v-auth" class="view active">
+        <div style="margin: auto; width: 100%; max-width: 300px; text-align: center;">
+            <div style="font-size: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--p));">💠</div>
+            <h1 style="font-size: 32px; letter-spacing: -1.5px;">Sleep 27</h1>
+            <p style="color:var(--text-m); margin-bottom: 40px;">Elite Messaging Protocol</p>
+            <input type="text" id="reg-n" style="width:100%; padding:20px; border-radius:18px; border:none; background:#1c1c1e; color:#fff; margin-bottom:12px;" placeholder="Имя Фамилия">
+            <input type="text" id="reg-u" style="width:100%; padding:20px; border-radius:18px; border:none; background:#1c1c1e; color:#fff; margin-bottom:30px;" placeholder="@username">
+            <button onclick="App.auth()" style="width:100%; padding:20px; border-radius:18px; background:var(--p); color:#fff; border:none; font-weight:800; font-size:18px; box-shadow: 0 10px 30px rgba(10,132,255,0.4);">Войти в систему</button>
         </div>
     </div>
 
     <div id="v-home" class="view">
         <header>
-            <button class="h-btn" onclick="Core.toggleTheme()"><i class="fa-solid fa-moon"></i></button>
             <div class="h-title">Чаты</div>
-            <button class="h-btn" onclick="Core.go('search')"><i class="fa-solid fa-user-plus"></i></button>
+            <div onclick="App.go('search')" style="color:var(--p); font-size:24px;"><i class="fa-solid fa-circle-plus"></i></div>
         </header>
-        <div class="scroller" id="home-chats">
+        <div class="stories-bar" id="stories-list">
+            <div class="story-node" onclick="Media.postStory()">
+                <div class="story-ring" style="border-color: #333;">
+                    <div class="story-av"><i class="fa-solid fa-plus"></i></div>
+                </div>
+                <div style="font-size:11px;">Мой статус</div>
             </div>
+        </div>
+        <div class="scroller" id="chats-list"></div>
     </div>
 
     <div id="v-search" class="view">
         <header>
-            <button class="h-btn" onclick="Core.go('home')">Отмена</button>
-            <div class="h-title">Люди</div>
-            <div style="width: 50px;"></div>
+            <button onclick="App.go('home')" style="background:none; border:none; color:var(--p); font-size:17px;">Отмена</button>
+            <div class="h-title">Глобальный поиск</div>
+            <div style="width:50px;"></div>
         </header>
-        <div class="search-container">
-            <input type="text" id="search-input" class="search-input" placeholder="Поиск по нику или имени..." oninput="Core.search()">
+        <div style="padding:15px 20px;">
+            <input type="text" id="search-q" oninput="App.search()" style="width:100%; padding:14px; border-radius:14px; border:none; background:#1c1c1e; color:#fff;" placeholder="Поиск по @username или имени...">
         </div>
-        <div class="scroller" id="search-results">
-            </div>
+        <div class="scroller" id="search-res"></div>
     </div>
 
     <div id="v-chat" class="view">
         <header>
-            <button class="h-btn" onclick="Core.go('home')"><i class="fa-solid fa-chevron-left"></i> Назад</button>
-            <div class="h-title" id="chat-title">Чат</div>
-            <div style="width: 50px;"></div>
+            <button onclick="App.go('home')" style="background:none; border:none; color:var(--p); font-size:22px;"><i class="fa-solid fa-chevron-left"></i></button>
+            <div style="text-align: center;">
+                <div class="h-title" id="chat-title" style="font-size:18px;">Имя</div>
+                <div class="h-sub" id="chat-status">в сети</div>
+            </div>
+            <div onclick="Media.call()" style="color:var(--p); font-size:22px;"><i class="fa-solid fa-video"></i></div>
         </header>
-        <div class="chat-wall" id="chat-messages"></div>
-        <div class="chat-bar">
-            <div id="chat-input" class="input-area" contenteditable="true"></div>
-            <button class="h-btn" onclick="Core.sendMessage()" style="font-size: 28px;"><i class="fa-solid fa-circle-arrow-up"></i></button>
+        <div class="wall" id="chat-wall"></div>
+        <div class="bar">
+            <label for="f-up" class="btn-act"><i class="fa-solid fa-grid-2-plus"></i></label>
+            <input type="file" id="f-up" hidden onchange="Media.file(this)">
+            <div id="chat-in" class="in-box" contenteditable="true" data-placeholder="Cообщение..." oninput="App.typing()"></div>
+            <button id="rec-voice" class="btn-act" onmousedown="Media.recStart()" onmouseup="Media.recStop()"><i class="fa-solid fa-microphone"></i></button>
+            <button id="send-msg" class="btn-act" onclick="App.send()" style="display:none;"><i class="fa-solid fa-circle-arrow-up"></i></button>
         </div>
     </div>
 
-    <div id="v-profile" class="view">
-        <header><div class="h-title">Профиль</div></header>
-        <div class="scroller">
-            <div class="profile-header">
-                <div class="p-avatar" id="p-av">?</div>
-                <h2 id="p-name">Имя</h2>
-                <p id="p-user" style="color: var(--text-m);">@user</p>
-            </div>
-            <div class="list-item" onclick="Core.logout()" style="color: #ff3b30; justify-content: center; font-weight: 600;">
-                Выйти из аккаунта
-            </div>
+    <div id="call-ui" class="view">
+        <div class="call-info">
+            <div class="call-av-big" id="call-av">?</div>
+            <h1 id="call-name">Контакт</h1>
+            <p id="call-state" style="color:var(--p); font-weight:bold; margin-top:10px;">Входящий вызов...</p>
+        </div>
+        <div style="display:flex; gap:40px;">
+            <button onclick="Media.endCall()" style="width:75px; height:75px; border-radius:50%; background:#FF3B30; border:none; color:#fff; font-size:28px;"><i class="fa-solid fa-phone-slash"></i></button>
+            <button id="call-ans" onclick="Media.ansCall()" style="width:75px; height:75px; border-radius:50%; background:#34C759; border:none; color:#fff; font-size:28px;"><i class="fa-solid fa-phone"></i></button>
         </div>
     </div>
 
-    <nav id="main-nav">
-        <div class="nav-item active" onclick="Core.go('home', this)"><i class="fa-solid fa-message"></i><span>Чаты</span></div>
-        <div class="nav-item" onclick="Core.go('profile', this)"><i class="fa-solid fa-user"></i><span>Профиль</span></div>
+    <div id="ctx-menu">
+        <div class="ctx-item" onclick="App.msgEdit()"><i class="fa-solid fa-pen"></i> Изменить</div>
+        <div class="ctx-item" style="color:#FF3B30;" onclick="App.msgDel()"><i class="fa-solid fa-trash"></i> Удалить</div>
+    </div>
+
+    <nav id="navbar" style="display:none;">
+        <div class="tab active" onclick="App.go('home')"><i class="fa-solid fa-comments"></i><span>Чаты</span></div>
+        <div class="tab" onclick="App.go('profile')"><i class="fa-solid fa-circle-user"></i><span>Профиль</span></div>
     </nav>
 
     <script>
-        // === КОНФИГУРАЦИЯ FIREBASE ===
-        const firebaseConfig = {
+        // FIREBASE (Используем ту же базу)
+        const fbConfig = {
             apiKey: "AIzaSyDzCviqV3rCSLZL-K8h7n6j7aLGkZEmybM",
             authDomain: "sleep-menager.firebaseapp.com",
             databaseURL: "https://sleep-menager-default-rtdb.firebaseio.com"
         };
-        firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(fbConfig);
         const db = firebase.database();
 
-        const Core = {
-            me: JSON.parse(localStorage.getItem('sleep_v4_user')),
-            activeChat: null,
+        const App = {
+            me: JSON.parse(localStorage.getItem('sleep_god_v1')),
+            active: null,
+            ctxMsg: null,
+            typingTimer: null,
 
             init() {
-                if (this.me) {
+                if(this.me) {
                     this.go('home');
-                    this.loadMyDialogs();
-                    this.updateProfileInfo();
-                } else {
-                    document.getElementById('v-auth').classList.add('active');
-                    document.getElementById('main-nav').style.display = 'none';
+                    this.listenChats();
+                    this.listenStories();
+                    this.updateStatus(true);
+                    Media.listenCalls();
                 }
             },
 
-            // РЕГИСТРАЦИЯ С ПРОВЕРКОЙ
-            async register() {
-                const n = document.getElementById('reg-name').value.trim();
-                const u = document.getElementById('reg-user').value.trim().toLowerCase().replace('@','');
-                const btn = document.getElementById('reg-btn');
-                const err = document.getElementById('auth-error');
-
-                if (n.length < 2 || u.length < 3) {
-                    err.innerText = "Имя от 2 симв., ник от 3 симв.";
-                    err.style.display = 'block';
-                    return;
-                }
-
-                btn.disabled = true;
-                err.style.display = 'none';
-
-                // Проверяем, не занят ли ник
-                const snapshot = await db.ref('users/' + u).once('value');
-                if (snapshot.exists()) {
-                    err.innerText = "Этот @username уже занят!";
-                    err.style.display = 'block';
-                    btn.disabled = false;
-                    return;
-                }
-
-                const userData = { name: n, user: '@' + u, joined: Date.now() };
-                db.ref('users/' + u).set(userData).then(() => {
-                    localStorage.setItem('sleep_v4_user', JSON.stringify(userData));
+            auth() {
+                const n = document.getElementById('reg-n').value;
+                const u = document.getElementById('reg-u').value.toLowerCase().replace('@','');
+                if(!n || !u) return;
+                this.me = { name: n, user: '@'+u, bio: 'Sleep User' };
+                db.ref('users/'+u).set(this.me).then(() => {
+                    localStorage.setItem('sleep_god_v1', JSON.stringify(this.me));
                     location.reload();
                 });
             },
 
-            go(id, el) {
+            go(id) {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.getElementById('v-' + id).classList.add('active');
-                
-                if (el) {
-                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                    el.classList.add('active');
-                }
-
-                if (id === 'search') this.search(); // Сразу грузим всех при открытии
-                
-                const nav = document.getElementById('main-nav');
-                nav.style.display = (id === 'home' || id === 'profile') ? 'flex' : 'none';
+                document.getElementById('v-'+id).classList.add('active');
+                document.getElementById('navbar').style.display = (id=='home'||id=='profile') ? 'flex' : 'none';
+                if(id=='search') this.search();
             },
 
-            // ГАРАНТИРОВАННЫЙ ПОИСК
+            // УЛУЧШЕННЫЙ ПОИСК
             search() {
-                const q = document.getElementById('search-input').value.toLowerCase();
-                const res = document.getElementById('search-results');
-                
-                // Мы берем всех юзеров из ветки 'users'
+                const q = document.getElementById('search-q').value.toLowerCase().replace('@','');
+                const box = document.getElementById('search-res');
                 db.ref('users').once('value', snap => {
-                    res.innerHTML = '';
-                    if (!snap.exists()) {
-                        res.innerHTML = '<p style="text-align:center; padding:20px; color:gray;">Никого нет</p>';
-                        return;
-                    }
-
-                    let count = 0;
-                    snap.forEach(child => {
-                        const u = child.val();
-                        // Не показываем самих себя
-                        if (u.user !== this.me.user) {
-                            if (!q || u.user.includes(q) || u.name.toLowerCase().includes(q)) {
-                                count++;
-                                res.innerHTML += `
-                                    <div class="list-item" onclick="Core.startChat('${u.user}', '${u.name}')">
-                                        <div class="avatar">${u.name[0]}</div>
-                                        <div class="item-info">
-                                            <div class="item-name">${u.name}</div>
-                                            <div class="item-meta">${u.user}</div>
-                                        </div>
-                                    </div>`;
-                            }
+                    box.innerHTML = '';
+                    snap.forEach(u => {
+                        const v = u.val();
+                        if(v.user !== this.me.user && (!q || v.user.includes(q) || v.name.toLowerCase().includes(q))) {
+                            box.innerHTML += `<div class="item" onclick="App.openChat('${v.user}', '${v.name}')">
+                                <div class="av">${v.name[0]}</div>
+                                <div><div style="font-weight:bold;">${v.name}</div><div style="color:gray; font-size:13px;">${v.user}</div></div>
+                            </div>`;
                         }
                     });
-                    if (count === 0) res.innerHTML = '<p style="text-align:center; padding:20px; color:gray;">Никто не найден</p>';
                 });
             },
 
-            startChat(userId, userName) {
-                const chatID = [this.me.user, userId].sort().join('_').replace(/@/g,'');
-                this.activeChat = { id: chatID, name: userName, user: userId };
-                
-                document.getElementById('chat-title').innerText = userName;
+            openChat(user, name) {
+                const id = [this.me.user, user].sort().join('_').replace(/@/g,'');
+                this.active = { id, user, name };
+                document.getElementById('chat-title').innerText = name;
                 this.go('chat');
-                
-                // Создаем запись в диалогах у обоих
-                const myKey = this.me.user.replace('@','');
-                const hisKey = userId.replace('@','');
-                
-                db.ref(`dialogs/${myKey}/${hisKey}`).update({ name: userName, user: userId, id: chatID, lastMsg: Date.now() });
-                db.ref(`dialogs/${hisKey}/${myKey}`).update({ name: this.me.name, user: this.me.user, id: chatID, lastMsg: Date.now() });
-
                 this.listenMessages();
+                this.listenPresence(user);
             },
 
-            loadMyDialogs() {
-                const myKey = this.me.user.replace('@','');
-                db.ref(`dialogs/${myKey}`).orderByChild('lastMsg').on('value', snap => {
-                    const box = document.getElementById('home-chats');
-                    box.innerHTML = '';
-                    if (!snap.exists()) {
-                        box.innerHTML = '<div style="text-align:center; padding:50px; color:gray;">Нет переписок.<br>Нажми "+" сверху справа.</div>';
-                        return;
-                    }
-                    
-                    let arr = [];
-                    snap.forEach(d => arr.push(d.val()));
-                    arr.reverse().forEach(d => {
-                        box.innerHTML += `
-                            <div class="list-item" onclick="Core.startChat('${d.user}', '${d.name}')">
-                                <div class="avatar">${d.name[0]}</div>
-                                <div class="item-info">
-                                    <div class="item-name">${d.name}</div>
-                                    <div class="item-meta">Нажмите, чтобы открыть чат</div>
-                                </div>
-                            </div>`;
-                    });
+            // ПЕЧАТАЕТ...
+            typing() {
+                const inp = document.getElementById('chat-in');
+                const hasText = inp.innerText.length > 0;
+                document.getElementById('send-msg').style.display = hasText ? 'block' : 'none';
+                document.getElementById('rec-voice').style.display = hasText ? 'none' : 'block';
+
+                db.ref(`typing/${this.active.id}/${this.me.user.replace('@','')}`).set(hasText);
+                clearTimeout(this.typingTimer);
+                this.typingTimer = setTimeout(() => {
+                    db.ref(`typing/${this.active.id}/${this.me.user.replace('@','')}`).set(false);
+                }, 2000);
+            },
+
+            listenPresence(otherUser) {
+                const key = otherUser.replace('@','');
+                db.ref(`users/${key}/online`).on('value', snap => {
+                    document.getElementById('chat-status').innerText = snap.val() ? 'в сети' : 'был недавно';
+                    document.getElementById('chat-status').style.color = snap.val() ? 'var(--p)' : 'gray';
+                });
+                db.ref(`typing/${this.active.id}/${key}`).on('value', snap => {
+                    if(snap.val()) document.getElementById('chat-status').innerText = 'печатает...';
                 });
             },
 
-            sendMessage() {
-                const inp = document.getElementById('chat-input');
+            send(media = null) {
+                const inp = document.getElementById('chat-in');
                 const txt = inp.innerText.trim();
-                if (!txt || !this.activeChat) return;
+                if(!txt && !media) return;
 
-                const msg = { sender: this.me.user, text: txt, time: Date.now() };
-                db.ref(`messages/${this.activeChat.id}`).push(msg);
-                
-                // Обновляем время диалога
+                const msgRef = db.ref(`messages/${this.active.id}`).push();
+                const msgData = {
+                    id: msgRef.key,
+                    from: this.me.user,
+                    text: txt,
+                    media: media,
+                    time: Date.now(),
+                    read: false
+                };
+                msgRef.set(msgData);
+
+                // Update Dialogs
                 const myKey = this.me.user.replace('@','');
-                const hisKey = this.activeChat.user.replace('@','');
-                db.ref(`dialogs/${myKey}/${hisKey}`).update({ lastMsg: Date.now() });
-                db.ref(`dialogs/${hisKey}/${myKey}`).update({ lastMsg: Date.now() });
+                const hisKey = this.active.user.replace('@','');
+                const meta = { name: this.active.name, user: this.active.user, last: txt || 'Вложение', time: Date.now() };
+                db.ref(`dialogs/${myKey}/${hisKey}`).update(meta);
+                db.ref(`dialogs/${hisKey}/${myKey}`).update({ name: this.me.name, user: this.me.user, last: txt || 'Вложение', time: Date.now() });
 
                 inp.innerText = '';
+                this.typing();
             },
 
             listenMessages() {
-                const wall = document.getElementById('chat-messages');
-                db.ref(`messages/${this.activeChat.id}`).on('value', snap => {
+                const wall = document.getElementById('chat-wall');
+                db.ref(`messages/${this.active.id}`).on('value', snap => {
                     wall.innerHTML = '';
                     snap.forEach(m => {
                         const d = m.val();
-                        const isMe = d.sender === this.me.user;
-                        wall.innerHTML += `<div class="bubble ${isMe ? 'sent' : 'received'}">${d.text}</div>`;
+                        const isMe = d.from === this.me.user;
+                        let content = d.deleted ? '<span class="deleted">Сообщение удалено</span>' : d.text;
+                        if(d.media && !d.deleted) {
+                            if(d.media.type == 'img') content = `<img src="${d.media.data}">` + content;
+                            if(d.media.type == 'voice') content = `<audio controls src="${d.media.data}" style="width:180px;"></audio>`;
+                        }
+                        
+                        const ticks = d.read ? '<i class="fa-solid fa-check-double" style="color:var(--p);"></i>' : '<i class="fa-solid fa-check"></i>';
+                        
+                        wall.innerHTML += `
+                            <div class="b-wrap ${isMe?'s':'r'}" oncontextmenu="App.showCtx(event, '${d.id}', ${isMe})">
+                                <div class="bubble">${content}</div>
+                                <div class="b-meta">${new Date(d.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} ${isMe?ticks:''}</div>
+                            </div>`;
+                        
+                        if(!isMe && !d.read) db.ref(`messages/${this.active.id}/${d.id}`).update({read:true});
                     });
                     wall.scrollTop = wall.scrollHeight;
                 });
             },
 
-            updateProfileInfo() {
-                document.getElementById('p-name').innerText = this.me.name;
-                document.getElementById('p-user').innerText = this.me.user;
-                document.getElementById('p-av').innerText = this.me.name[0];
+            showCtx(e, id, isMe) {
+                e.preventDefault();
+                if(!isMe) return;
+                this.ctxMsg = id;
+                const menu = document.getElementById('ctx-menu');
+                menu.style.display = 'block';
+                menu.style.top = e.pageY + 'px';
+                menu.style.left = (e.pageX - 100) + 'px';
+                window.onclick = () => menu.style.display = 'none';
             },
 
-            toggleTheme() {
-                const th = document.body.getAttribute('data-theme');
-                document.body.setAttribute('data-theme', th === 'dark' ? 'light' : 'dark');
+            msgDel() {
+                db.ref(`messages/${this.active.id}/${this.ctxMsg}`).update({deleted: true, text: '', media: null});
             },
 
-            logout() { localStorage.clear(); location.reload(); }
+            msgEdit() {
+                const newText = prompt("Редактировать:");
+                if(newText) db.ref(`messages/${this.active.id}/${this.ctxMsg}`).update({text: newText + ' (ред.)'});
+            },
+
+            listenChats() {
+                const box = document.getElementById('chats-list');
+                db.ref(`dialogs/${this.me.user.replace('@','')}`).orderByChild('time').on('value', snap => {
+                    box.innerHTML = '';
+                    let arr = [];
+                    snap.forEach(d => arr.push(d.val()));
+                    arr.reverse().forEach(v => {
+                        box.innerHTML += `<div class="item" onclick="App.openChat('${v.user}', '${v.name}')">
+                            <div class="av">${v.name[0]}<div class="online-mark"></div></div>
+                            <div style="flex:1;"><div style="font-weight:bold;">${v.name}</div><div style="color:gray; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:200px;">${v.last}</div></div>
+                        </div>`;
+                    });
+                });
+            },
+
+            listenStories() {
+                const box = document.getElementById('stories-list');
+                db.ref('stories').on('value', snap => {
+                    // Очищаем всё кроме кнопки "Плюс"
+                    const plus = box.firstElementChild;
+                    box.innerHTML = '';
+                    box.appendChild(plus);
+                    snap.forEach(s => {
+                        const v = s.val();
+                        box.innerHTML += `<div class="story-node" onclick="alert('Просмотр истории...')">
+                            <div class="story-ring"><div class="story-av" style="background:url(${v.data}); background-size:cover;"></div></div>
+                            <div style="font-size:11px;">${v.name}</div>
+                        </div>`;
+                    });
+                });
+            },
+
+            updateStatus(s) {
+                db.ref(`users/${this.me.user.replace('@','')}/online`).set(s);
+                db.ref(`users/${this.me.user.replace('@','')}/online`).onDisconnect().set(false);
+            }
         };
 
-        Core.init();
+        const Media = {
+            rec: null,
+            chunks: [],
+
+            file(el) {
+                const f = el.files[0];
+                const reader = new FileReader();
+                reader.onload = e => App.send({type: 'img', data: e.target.result});
+                reader.readAsDataURL(f);
+            },
+
+            recStart() {
+                navigator.mediaDevices.getUserMedia({audio:true}).then(s => {
+                    this.rec = new MediaRecorder(s);
+                    this.chunks = [];
+                    this.rec.ondataavailable = e => this.chunks.push(e.data);
+                    this.rec.start();
+                    document.getElementById('rec-voice').style.color = 'red';
+                });
+            },
+
+            recStop() {
+                if(!this.rec) return;
+                this.rec.onstop = () => {
+                    const blob = new Blob(this.chunks, {type:'audio/ogg'});
+                    const r = new FileReader();
+                    r.onload = e => App.send({type:'voice', data: e.target.result});
+                    r.readAsDataURL(blob);
+                };
+                this.rec.stop();
+                document.getElementById('rec-voice').style.color = 'var(--p)';
+            },
+
+            postStory() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.onchange = (e) => {
+                    const r = new FileReader();
+                    r.onload = ev => db.ref('stories').push({name: App.me.name, data: ev.target.result, time: Date.now()});
+                    r.readAsAsDataURL(e.target.files[0]);
+                };
+                input.click();
+            },
+
+            call() {
+                const hisKey = App.active.user.replace('@','');
+                db.ref(`calls/${hisKey}`).set({from: App.me.user, name: App.me.name, type: 'video'});
+                document.getElementById('call-ui').classList.add('active');
+                document.getElementById('call-name').innerText = App.active.name;
+                document.getElementById('call-ans').style.display = 'none';
+                document.getElementById('call-state').innerText = 'Вызов...';
+            },
+
+            listenCalls() {
+                const myKey = App.me.user.replace('@','');
+                db.ref(`calls/${myKey}`).on('value', snap => {
+                    if(snap.exists()) {
+                        const v = snap.val();
+                        document.getElementById('call-ui').classList.add('active');
+                        document.getElementById('call-name').innerText = v.name;
+                        document.getElementById('call-av').innerText = v.name[0];
+                        document.getElementById('call-ans').style.display = 'block';
+                    }
+                });
+            },
+
+            ansCall() {
+                document.getElementById('call-state').innerText = 'Соединение...';
+            },
+
+            endCall() {
+                db.ref(`calls/${App.me.user.replace('@','')}`).remove();
+                if(App.active) db.ref(`calls/${App.active.user.replace('@','')}`).remove();
+                document.getElementById('call-ui').classList.remove('active');
+            }
+        };
+
+        App.init();
     </script>
 </body>
-</html>
+    </html>
