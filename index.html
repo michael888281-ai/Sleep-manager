@@ -3,466 +3,551 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sleep Messenger | Ultimate Edition</title>
+    <title>Sleep Messenger | iOS 27 Glass</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ТЕМЫ --- */
+        /* === iOS 27 GLASSMORPHISM ENGINE === */
         :root {
-            --p: #007AFF;
-            --p-dark: #0056b3;
-            --bg: #ffffff;
-            --s-bg: #f2f2f7;
-            --text: #000000;
-            --text-m: #8e8e93;
-            --border: rgba(0,0,0,0.08);
-            --glass: rgba(255,255,255,0.8);
-            --bubble-in: #ffffff;
-            --bubble-out: #007AFF;
-            --radius: 28px;
+            --p: #0A84FF; /* iOS Blue */
+            --bg-grad: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            --text-main: #1c1c1e;
+            --text-mut: #8e8e93;
+            --radius-xl: 40px;
+            --radius-lg: 28px;
+            --radius-md: 18px;
+            --blur: blur(40px) saturate(200%);
             --safe-t: env(safe-area-inset-top);
             --safe-b: env(safe-area-inset-bottom);
         }
 
         [data-theme="dark"] {
-            --bg: #000000;
-            --s-bg: #1c1c1e;
-            --text: #ffffff;
-            --text-m: #8e8e93;
-            --border: rgba(255,255,255,0.1);
-            --glass: rgba(28,28,30,0.8);
-            --bubble-in: #262629;
-            --bubble-out: #007AFF;
+            --bg-grad: linear-gradient(135deg, #000000 0%, #1a1a1c 100%);
+            --glass-bg: rgba(30, 30, 30, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-mut: #8e8e93;
         }
 
-        /* --- БАЗОВЫЕ СТИЛИ --- */
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
-        body, html { height: 100%; width: 100%; background: var(--bg); color: var(--text); overflow: hidden; margin: 0; position: fixed; transition: background 0.3s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, "SF Pro Display", sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg-grad); color: var(--text-main); height: 100vh; overflow: hidden; position: fixed; width: 100%; transition: background 0.5s ease; }
 
-        /* --- ЛОГИКА ЭКРАНОВ --- */
-        .view { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; z-index: 10; animation: viewEnter 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); }
+        /* Утилиты Стекла */
+        .glass-panel { background: var(--glass-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+
+        /* === ЭКРАНЫ === */
+        .view { position: fixed; inset: 0; display: none; flex-direction: column; z-index: 10; animation: scaleIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .view.active { display: flex; }
-        @keyframes viewEnter { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* --- ШАПКИ И НАВИГАЦИЯ --- */
-        header { padding-top: var(--safe-t); background: var(--glass); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border); height: calc(65px + var(--safe-t)); display: flex; align-items: center; justify-content: space-between; padding-inline: 20px; z-index: 1000; }
-        .h-left, .h-right { display: flex; align-items: center; gap: 15px; width: 30%; }
-        .h-right { justify-content: flex-end; }
-        .h-center { width: 40%; text-align: center; }
-        .h-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        /* === ШАПКА === */
+        header { padding-top: var(--safe-t); height: calc(75px + var(--safe-t)); display: flex; align-items: center; justify-content: space-between; padding-inline: 25px; z-index: 1000; position: sticky; top: 0; }
+        .h-title { font-size: 28px; font-weight: 800; letter-spacing: -0.8px; background: linear-gradient(90deg, #0A84FF, #5E5CE6); -webkit-background-clip: text; color: transparent; }
+        .h-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); cursor: pointer; transition: 0.3s; }
+        .h-icon:active { transform: scale(0.85); }
 
-        /* --- СПИСОК ЧАТОВ И СТОРИЗ --- */
-        .scroller { flex: 1; overflow-y: auto; padding-bottom: 100px; scroll-behavior: smooth; }
-        .stories { display: flex; gap: 12px; padding: 15px 20px; overflow-x: auto; scrollbar-width: none; }
-        .stories::-webkit-scrollbar { display: none; }
-        .story-item { flex-shrink: 0; width: 68px; text-align: center; }
-        .story-ring { width: 68px; height: 68px; border-radius: 26px; border: 2.5px solid var(--p); padding: 3px; display: flex; align-items: center; justify-content: center; }
-        .story-ring img { width: 100%; height: 100%; border-radius: 22px; object-fit: cover; }
-        .story-name { font-size: 11px; margin-top: 5px; color: var(--text-m); font-weight: 500; }
+        /* === СТОРИС (СТАТУСЫ) === */
+        .stories-container { display: flex; gap: 18px; padding: 15px 25px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--glass-border); }
+        .stories-container::-webkit-scrollbar { display: none; }
+        .story-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+        .story-ring { width: 75px; height: 75px; border-radius: 30px; padding: 3px; background: linear-gradient(45deg, #FF2D55, #FF9500); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .story-ring.mine { background: var(--glass-border); border: 2px dashed #8e8e93; }
+        .story-ring:active { transform: scale(0.9); }
+        .story-av { width: 100%; height: 100%; border-radius: 26px; background: var(--glass-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border: 3px solid var(--bg-grad); color: var(--text-main); object-fit: cover; }
+        .story-name { font-size: 12px; font-weight: 600; color: var(--text-main); }
 
-        .chat-item { display: flex; padding: 14px 20px; gap: 15px; align-items: center; border-bottom: 0.5px solid var(--border); transition: 0.2s; }
-        .chat-item:active { background: var(--s-bg); transform: scale(0.98); }
-        .avatar { width: 58px; height: 58px; border-radius: 22px; background: linear-gradient(135deg, var(--p), #5856D6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; position: relative; flex-shrink: 0; }
-        .online-dot { position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; background: #34c759; border: 3px solid var(--bg); border-radius: 50%; }
-        .chat-info { flex: 1; min-width: 0; }
-        .chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .chat-name { font-size: 17px; font-weight: 700; }
-        .chat-msg { font-size: 15px; color: var(--text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chat-meta { text-align: right; }
-        .chat-time { font-size: 12px; color: var(--text-m); }
-        .badge { background: var(--p); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 800; margin-top: 5px; display: inline-block; }
+        /* STORY VIEWER */
+        #story-viewer { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); display: none; flex-direction: column; color: white; }
+        .sv-header { position: absolute; top: 50px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+        .sv-content { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        .sv-img { max-width: 100%; max-height: 80vh; border-radius: var(--radius-lg); }
+        .sv-reacts { position: absolute; bottom: 80px; width: 100%; display: flex; justify-content: center; gap: 20px; }
+        .react-btn { font-size: 40px; cursor: pointer; transition: 0.2s; background: var(--glass-bg); border-radius: 50%; padding: 10px; backdrop-filter: blur(10px); }
+        .react-btn:active { transform: scale(1.5) translateY(-20px); }
 
-        /* --- ОКНО ЧАТА --- */
-        .chat-view-content { flex: 1; background: var(--s-bg); display: flex; flex-direction: column; }
-        .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 75%; padding: 12px 16px; border-radius: 20px; font-size: 16px; line-height: 1.4; position: relative; }
-        .msg.sent { align-self: flex-end; background: var(--bubble-out); color: #fff; border-bottom-right-radius: 4px; }
-        .msg.received { align-self: flex-start; background: var(--bubble-in); color: var(--text); border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .msg-time { font-size: 10px; opacity: 0.6; margin-top: 4px; display: block; text-align: right; }
+        /* === СПИСКИ (ЧАТЫ И ПОИСК) === */
+        .scroller { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+        .list-item { display: flex; align-items: center; gap: 18px; padding: 16px 25px; margin: 10px 20px; border-radius: var(--radius-lg); transition: 0.3s; cursor: pointer; }
+        .list-item:active { transform: scale(0.96); }
+        .list-av { width: 64px; height: 64px; border-radius: 24px; background: linear-gradient(135deg, #0A84FF, #32ADE6); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; color: white; position: relative; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3); }
+        .status-dot { position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; background: #34C759; border: 4px solid #fff; border-radius: 50%; }
+        .list-info { flex: 1; min-width: 0; }
+        .list-name { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+        .list-msg { font-size: 15px; color: var(--text-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .input-area { padding: 10px 15px calc(15px + var(--safe-b)); background: var(--glass); backdrop-filter: blur(20px); border-top: 0.5px solid var(--border); display: flex; align-items: flex-end; gap: 12px; }
-        .input-box { flex: 1; background: var(--s-bg); border-radius: 22px; padding: 10px 18px; max-height: 150px; overflow-y: auto; font-size: 16px; border: none; }
-        .btn-round { width: 42px; height: 42px; border-radius: 50%; background: var(--p); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-round:active { transform: scale(0.9); }
+        /* === ЧАТ (СООБЩЕНИЯ, ВОЙСЫ, КРУЖОЧКИ) === */
+        #v-chat-room { background: var(--bg-grad); z-index: 2000; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .bubble { max-width: 78%; padding: 14px 18px; border-radius: 24px; font-size: 17px; line-height: 1.4; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .bubble.sent { align-self: flex-end; background: var(--p); color: white; border-bottom-right-radius: 6px; }
+        .bubble.received { align-self: flex-start; background: var(--glass-bg); backdrop-filter: var(--blur); color: var(--text-main); border: 1px solid var(--glass-border); border-bottom-left-radius: 6px; }
+        
+        /* Медиа внутри чата */
+        .audio-msg { width: 200px; height: 40px; border-radius: 20px; outline: none; }
+        .video-circle { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid var(--p); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-        /* --- ЗВОНКИ --- */
-        .call-ui { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; color: #fff; }
-        #remote-v { width: 100%; height: 100%; object-fit: cover; }
-        #local-v { position: absolute; top: 70px; right: 20px; width: 110px; height: 160px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; }
-        .call-info { position: absolute; top: 100px; left: 0; width: 100%; text-align: center; }
-        .call-btns { position: absolute; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 30px; }
-        .call-btn { width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); cursor: pointer; }
-        .call-btn.hang { background: #ff3b30; }
+        /* Панель ввода */
+        .input-bar { padding: 15px 20px calc(15px + var(--safe-b)); display: flex; align-items: flex-end; gap: 15px; z-index: 100; }
+        .chat-input { flex: 1; min-height: 50px; max-height: 120px; border-radius: 25px; padding: 15px 20px; font-size: 17px; border: none; background: rgba(0,0,0,0.05); color: var(--text-main); overflow-y: auto; }
+        [data-theme="dark"] .chat-input { background: rgba(255,255,255,0.1); }
+        .action-btn { width: 50px; height: 50px; border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; cursor: pointer; transition: 0.2s; border: none; }
+        .btn-text { background: var(--p); }
+        .btn-mic { background: #FF3B30; }
+        .btn-cam { background: #5E5CE6; }
+        .action-btn:active { transform: scale(0.8); }
 
-        /* --- НАВИГАЦИЯ --- */
-        nav { position: fixed; bottom: 0; width: 100%; height: calc(70px + var(--safe-b)); background: var(--glass); backdrop-filter: blur(25px); border-top: 0.5px solid var(--border); display: flex; padding-bottom: var(--safe-b); z-index: 900; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-m); gap: 4px; transition: 0.3s; }
-        .nav-item.active { color: var(--p); }
-        .nav-item i { font-size: 24px; }
-        .nav-item span { font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
+        /* === ЗВОНКИ (WebRTC) === */
+        #call-ui { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(40px); z-index: 10000; display: none; flex-direction: column; color: white; align-items: center; justify-content: center; }
+        #remote-video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; z-index: 1; }
+        #local-video { position: absolute; top: 80px; right: 25px; width: 120px; height: 180px; border-radius: 24px; border: 3px solid rgba(255,255,255,0.5); object-fit: cover; z-index: 2; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .call-controls { position: absolute; bottom: 60px; z-index: 3; display: flex; gap: 35px; background: rgba(255,255,255,0.15); padding: 20px 40px; border-radius: 40px; backdrop-filter: blur(20px); }
+        .c-btn { width: 70px; height: 70px; border-radius: 35px; display: flex; align-items: center; justify-content: center; font-size: 30px; background: rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s; }
+        .c-btn.end { background: #FF3B30; box-shadow: 0 0 30px rgba(255, 59, 48, 0.6); }
 
-        /* --- АВТОРИЗАЦИЯ --- */
-        #auth-gate { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
-        .auth-logo { width: 120px; height: 120px; background: var(--p); border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 60px; color: #fff; box-shadow: 0 20px 40px rgba(0,122,255,0.3); margin-bottom: 30px; animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-        .auth-card { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 15px; }
-        .input-u { padding: 18px; border-radius: 18px; border: 2px solid var(--s-bg); background: var(--s-bg); font-size: 17px; transition: 0.3s; text-align: center; }
-        .input-u:focus { border-color: var(--p); background: var(--bg); }
-        .btn-auth { padding: 18px; border-radius: 18px; background: var(--p); color: #fff; border: none; font-size: 18px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(0,122,255,0.2); }
+        /* === НАВИГАЦИЯ (Floating Island) === */
+        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 75px; border-radius: 40px; display: flex; justify-content: space-around; align-items: center; z-index: 900; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-mut); font-size: 24px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); width: 60px; height: 60px; border-radius: 30px; }
+        .nav-item.active { color: white; background: var(--p); box-shadow: 0 10px 25px rgba(10, 132, 255, 0.4); transform: translateY(-5px); }
 
-        /* --- ПОИСК --- */
-        #search-view { z-index: 2000; }
-        .search-bar { padding: 10px 20px; background: var(--s-bg); border-radius: 15px; margin: 15px 20px; display: flex; align-items: center; gap: 10px; }
-        .search-bar input { border: none; background: none; flex: 1; padding: 10px; font-size: 17px; }
+        /* === AUTH & ПРЕЛOАДЕР === */
+        #auth-view { position: fixed; inset: 0; z-index: 11000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        .auth-logo { font-size: 100px; margin-bottom: 20px; text-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .auth-input { width: 100%; max-width: 320px; padding: 20px; border-radius: 25px; border: none; background: var(--glass-bg); backdrop-filter: var(--blur); font-size: 18px; margin-bottom: 15px; text-align: center; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); color: var(--text-main); }
+        .auth-btn { width: 100%; max-width: 320px; padding: 20px; border-radius: 25px; background: var(--p); color: white; font-size: 20px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 15px 30px rgba(10, 132, 255, 0.3); }
+
+        /* Индкатор записи */
+        .recording-indicator { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: #FF3B30; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; animation: pulse 1s infinite; display: none; z-index: 3000; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body data-theme="light">
+<body>
 
-    <div id="auth-gate">
-        <div class="auth-logo">💤</div>
-        <h1 style="margin-bottom: 8px;">Sleep Messenger</h1>
-        <p style="color: var(--text-m); margin-bottom: 40px;">Ваши сны в безопасности</p>
-        <div class="auth-card">
-            <input type="text" id="reg-name" class="input-u" placeholder="Как вас зовут?">
-            <input type="text" id="reg-user" class="input-u" placeholder="@username">
-            <button class="btn-auth" onclick="Engine.register()">Создать профиль</button>
-        </div>
+    <div id="rec-indicator" class="recording-indicator">🎙 Запись...</div>
+
+    <div id="auth-view" class="view glass-panel active">
+        <div class="auth-logo">🫧</div>
+        <h1 style="font-size: 34px; font-weight: 800; margin-bottom: 40px;">Sleep OS 27</h1>
+        <input type="text" id="reg-name" class="auth-input" placeholder="Ваше Имя">
+        <input type="text" id="reg-user" class="auth-input" placeholder="Уникальный @username">
+        <button class="auth-btn" onclick="Sleep.login()">Войти в систему</button>
     </div>
 
-    <div id="v-chats" class="view active">
-        <header>
-            <div class="h-left"><span class="h-title" style="color:var(--p)">Sleep</span></div>
-            <div class="h-center"><span class="h-title">Чаты</span></div>
-            <div class="h-right"><i class="fa-solid fa-magnifying-glass" onclick="Engine.toggleView('search')"></i></div>
+    <div id="v-home" class="view">
+        <header class="glass-panel">
+            <div class="h-icon" onclick="Sleep.toggleTheme()"><i class="fa-solid fa-moon"></i></div>
+            <div class="h-title">Sleep</div>
+            <div class="h-icon" onclick="Sleep.switchView('search')"><i class="fa-solid fa-magnifying-glass"></i></div>
         </header>
-        
-        <div class="stories">
-            <div class="story-item">
-                <div class="story-ring" style="border-color: #ccc;"><i class="fa-solid fa-plus" style="font-size: 24px; color: #ccc;"></i></div>
+
+        <div class="stories-container glass-panel" id="stories-list">
+            <div class="story-wrapper" onclick="document.getElementById('story-upload').click()">
+                <div class="story-ring mine"><div class="story-av"><i class="fa-solid fa-plus"></i></div></div>
                 <div class="story-name">Мой статус</div>
+                <input type="file" id="story-upload" accept="image/*" style="display:none" onchange="Sleep.uploadStory(event)">
             </div>
-            <div id="stories-list" style="display:flex; gap:12px"></div>
         </div>
 
         <div class="scroller" id="chat-list">
-            <div style="padding: 100px 40px; text-align: center; opacity: 0.5;">
-                <i class="fa-solid fa-message" style="font-size: 60px; margin-bottom: 20px;"></i>
-                <h2>Тишина...</h2>
-                <p>Найдите друзей, чтобы начать общение</p>
+            <div style="text-align:center; padding: 50px; color: var(--text-mut);">
+                <i class="fa-solid fa-ghost" style="font-size: 60px; margin-bottom: 20px;"></i>
+                <h2>Нет диалогов</h2>
+                <p>Используй лупу, чтобы найти друзей</p>
             </div>
         </div>
     </div>
 
-    <div id="v-settings" class="view">
-        <header><div class="h-center"><span class="h-title">Настройки</span></div></header>
-        <div class="scroller">
-            <div style="padding: 40px 20px; text-align: center;">
-                <div class="avatar" id="my-av-big" style="width:110px; height:110px; margin:0 auto 20px; font-size:45px; border-radius:40px">?</div>
-                <h2 id="my-name-set">User</h2>
-                <p id="my-user-set" style="color:var(--text-m)">@username</p>
+    <div id="v-profile" class="view">
+        <header class="glass-panel"><div class="h-title" style="margin: 0 auto;">Профиль</div></header>
+        <div class="scroller" style="padding-top: 40px;">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <div id="my-av" style="width: 140px; height: 140px; border-radius: 50px; background: var(--p); color: white; display: flex; align-items: center; justify-content: center; font-size: 60px; font-weight: bold; margin: 0 auto 20px; box-shadow: 0 20px 40px rgba(10,132,255,0.4);">?</div>
+                <h1 id="my-name" style="font-size: 32px;">User</h1>
+                <p id="my-username" style="font-size: 18px; color: var(--text-mut);">@user</p>
             </div>
-            
-            <div style="margin: 20px; background: var(--s-bg); border-radius: 20px; overflow: hidden;">
-                <div class="chat-item" onclick="Engine.toggleTheme()">
-                    <i class="fa-solid fa-moon"></i>
-                    <div class="chat-info"><b>Темная тема</b></div>
-                    <div id="theme-status">Выкл</div>
-                </div>
-                <div class="chat-item">
-                    <i class="fa-solid fa-lock"></i>
-                    <div class="chat-info"><b>Конфиденциальность</b></div>
-                </div>
-                <div class="chat-item" onclick="Engine.logout()" style="color: #ff3b30;">
-                    <i class="fa-solid fa-door-open"></i>
-                    <div class="chat-info"><b>Выйти</b></div>
-                </div>
+            <div class="list-item glass-panel" onclick="Sleep.logout()" style="justify-content: center;">
+                <b style="color: #FF3B30; font-size: 20px;">Выйти из аккаунта</b>
             </div>
         </div>
     </div>
 
     <div id="v-search" class="view">
-        <header>
-            <i class="fa-solid fa-chevron-left" onclick="Engine.toggleView('chats')"></i>
-            <div class="h-center"><span class="h-title">Поиск</span></div>
-            <div class="h-right"></div>
+        <header class="glass-panel">
+            <div class="h-icon" onclick="Sleep.switchView('home')"><i class="fa-solid fa-chevron-left"></i></div>
+            <input type="text" id="search-input" placeholder="Поиск людей..." style="flex:1; margin:0 15px; background:none; border:none; font-size:20px; color:var(--text-main); font-weight:bold;" oninput="Sleep.doSearch()">
         </header>
-        <div class="search-bar">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="search-input" placeholder="Введите имя или @user" oninput="Engine.search()">
-        </div>
         <div class="scroller" id="search-results"></div>
     </div>
 
-    <div id="v-chat-room" class="view" style="z-index: 3000;">
-        <header>
-            <div class="h-left" onclick="Engine.toggleView('chats')"><i class="fa-solid fa-chevron-left"></i></div>
-            <div class="h-center">
-                <b id="chat-title">Name</b><br>
-                <small id="chat-status" style="color: var(--p); font-size: 11px;">online</small>
+    <div id="v-chat" class="view">
+        <header class="glass-panel">
+            <div class="h-icon" onclick="Sleep.switchView('home')"><i class="fa-solid fa-chevron-left"></i></div>
+            <div style="text-align: center; flex:1;">
+                <b id="active-chat-name" style="font-size: 20px;">Name</b><br>
+                <small style="color: #34C759; font-weight:bold;">В сети</small>
             </div>
-            <div class="h-right">
-                <i class="fa-solid fa-phone" onclick="Engine.call('audio')"></i>
-                <i class="fa-solid fa-video" onclick="Engine.call('video')" style="margin-left:20px"></i>
+            <div style="display:flex; gap:10px;">
+                <div class="h-icon" onclick="Sleep.startCall('audio')"><i class="fa-solid fa-phone"></i></div>
+                <div class="h-icon" onclick="Sleep.startCall('video')"><i class="fa-solid fa-video"></i></div>
             </div>
         </header>
-        <div class="chat-view-content">
-            <div class="messages" id="messages-wall"></div>
-            <div class="input-area">
-                <button class="btn-round" style="background: none; color: var(--text-m); font-size: 20px;"><i class="fa-solid fa-paperclip"></i></button>
-                <div class="input-box" id="msg-input" contenteditable="true" data-placeholder="Сообщение..."></div>
-                <button class="btn-round" onclick="Engine.sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
+        <div class="chat-area" id="msg-wall"></div>
+        <div class="input-bar glass-panel">
+            <div id="msg-input" class="chat-input" contenteditable="true" data-placeholder="Сообщение..."></div>
+            <button class="action-btn btn-text" onclick="Sleep.sendText()"><i class="fa-solid fa-paper-plane"></i></button>
+            <button class="action-btn btn-mic" onmousedown="Sleep.startRecord('audio')" onmouseup="Sleep.stopRecord()" ontouchstart="Sleep.startRecord('audio')" ontouchend="Sleep.stopRecord()"><i class="fa-solid fa-microphone"></i></button>
+            <button class="action-btn btn-cam" onmousedown="Sleep.startRecord('video')" onmouseup="Sleep.stopRecord()" ontouchstart="Sleep.startRecord('video')" ontouchend="Sleep.stopRecord()"><i class="fa-solid fa-camera"></i></button>
         </div>
     </div>
 
-    <div id="call-ui" class="call-ui">
-        <div class="call-info">
-            <h1 id="call-name">User</h1>
-            <p id="call-status">Звонок...</p>
+    <div id="story-viewer">
+        <div class="sv-header">
+            <div class="story-name" id="sv-name" style="font-size: 20px;">Name</div>
+            <div class="h-icon" onclick="document.getElementById('story-viewer').style.display='none'"><i class="fa-solid fa-xmark"></i></div>
         </div>
-        <video id="remote-v" autoplay playsinline></video>
-        <video id="local-v" autoplay playsinline muted></video>
-        <div class="call-btns">
-            <div class="call-btn"><i class="fa-solid fa-microphone-slash"></i></div>
-            <div class="call-btn hang" onclick="Engine.hangup()"><i class="fa-solid fa-phone-slash"></i></div>
-            <div class="call-btn" onclick="Engine.toggleCam()"><i class="fa-solid fa-camera-rotate"></i></div>
+        <div class="sv-content"><img id="sv-img" class="sv-img" src=""></div>
+        <div class="sv-reacts">
+            <div class="react-btn" onclick="Sleep.reactStory('🔥')">🔥</div>
+            <div class="react-btn" onclick="Sleep.reactStory('😂')">😂</div>
+            <div class="react-btn" onclick="Sleep.reactStory('❤️')">❤️</div>
         </div>
     </div>
 
-    <nav id="main-nav">
-        <div class="nav-item active" onclick="Engine.nav('chats', this)">
-            <i class="fa-solid fa-comment-dots"></i><span>Чаты</span>
+    <div id="call-ui">
+        <h2 id="call-status" style="position: absolute; top: 50px; z-index: 10;">Соединение...</h2>
+        <video id="remote-video" autoplay playsinline></video>
+        <video id="local-video" autoplay playsinline muted></video>
+        <div class="call-controls">
+            <div class="c-btn"><i class="fa-solid fa-microphone-slash"></i></div>
+            <div class="c-btn end" onclick="Sleep.endCall()"><i class="fa-solid fa-phone-slash"></i></div>
         </div>
-        <div class="nav-item" onclick="Engine.nav('settings', this)">
-            <i class="fa-solid fa-user-gear"></i><span>Опции</span>
-        </div>
+    </div>
+
+    <nav class="glass-panel" id="main-nav">
+        <div class="nav-item active" onclick="Sleep.switchView('home', this)"><i class="fa-solid fa-message"></i></div>
+        <div class="nav-item" onclick="Sleep.switchView('profile', this)"><i class="fa-solid fa-user"></i></div>
     </nav>
 
     <script>
-        // FIREBASE КОНФИГУРАЦИЯ (Замени на свои данные)
-        const firebaseConfig = {
+        // ТВОИ ДАННЫЕ FIREBASE
+        const fbConfig = {
             apiKey: "AIzaSyDzCviqV3rCSLZL-K8h7n6j7aLGkZEmybM",
             authDomain: "sleep-menager.firebaseapp.com",
             databaseURL: "https://sleep-menager-default-rtdb.firebaseio.com"
         };
-        firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(fbConfig);
         const db = firebase.database();
 
-        // ENGINE - ЯДРО ПРИЛОЖЕНИЯ
-        const Engine = {
-            me: JSON.parse(localStorage.getItem('slp_ult')),
-            chat: null,
-            pc: null,
-            stream: null,
+        const Sleep = {
+            me: JSON.parse(localStorage.getItem('sleep_ios27')),
+            chat: null, currentStoryId: null,
+            mediaRec: null, audioChunks: [], recType: null,
+            pc: null, localStream: null,
 
             init() {
                 if(this.me) {
-                    document.getElementById('auth-gate').style.display = 'none';
-                    this.syncProfile();
-                    this.loadChatList();
-                    this.listenIncomingCalls();
+                    document.getElementById('auth-view').classList.remove('active');
+                    document.getElementById('v-home').classList.add('active');
+                    this.setupProfile();
+                    this.loadChats();
+                    this.loadStories();
+                    this.listenCalls();
+                    if(this.me.theme) document.body.setAttribute('data-theme', this.me.theme);
                 }
             },
 
-            register() {
+            login() {
                 const n = document.getElementById('reg-name').value.trim();
                 let u = document.getElementById('reg-user').value.trim().toLowerCase().replace('@','');
-                if(!n || !u) return alert("Заполни всё!");
+                if(!n || !u) return alert("Введите данные!");
                 
-                this.me = { name: n, user: '@' + u, bio: "Пользуюсь Sleep Messenger", theme: 'light' };
+                this.me = { name: n, user: '@' + u, theme: 'light' };
                 db.ref('users/' + u).set(this.me);
-                localStorage.setItem('slp_ult', JSON.stringify(this.me));
+                localStorage.setItem('sleep_ios27', JSON.stringify(this.me));
                 location.reload();
             },
 
-            syncProfile() {
-                document.getElementById('my-name-set').innerText = this.me.name;
-                document.getElementById('my-user-set').innerText = this.me.user;
-                document.getElementById('my-av-big').innerText = this.me.name[0];
-                document.body.setAttribute('data-theme', this.me.theme || 'light');
+            setupProfile() {
+                document.getElementById('my-name').innerText = this.me.name;
+                document.getElementById('my-username').innerText = this.me.user;
+                document.getElementById('my-av').innerText = this.me.name[0];
             },
 
-            nav(id, el) {
+            switchView(id, navEl = null) {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 document.getElementById('v-' + id).classList.add('active');
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                el.classList.add('active');
+                if(navEl) {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    navEl.classList.add('active');
+                }
+                if(id === 'home' || id === 'profile') document.getElementById('main-nav').style.display = 'flex';
+                else document.getElementById('main-nav').style.display = 'none';
             },
 
-            toggleView(id) {
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.getElementById('v-' + id).classList.add('active');
+            toggleTheme() {
+                this.me.theme = this.me.theme === 'light' ? 'dark' : 'light';
+                document.body.setAttribute('data-theme', this.me.theme);
+                localStorage.setItem('sleep_ios27', JSON.stringify(this.me));
             },
 
-            // --- ПОИСК И СПИСОК ЧАТОВ ---
-            search() {
+            // --- БЕЗОТКАЗНЫЙ ПОИСК ---
+            doSearch() {
                 const q = document.getElementById('search-input').value.toLowerCase().replace('@','');
                 const res = document.getElementById('search-results');
-                if(q.length < 2) return res.innerHTML = '';
+                if(q.length < 1) return res.innerHTML = '';
 
+                // Грузим всех юзеров и фильтруем на клиенте (100% работает)
                 db.ref('users').once('value', snap => {
                     res.innerHTML = '';
+                    let found = false;
                     snap.forEach(child => {
                         const u = child.val();
-                        if(u.user !== this.me.user && u.user.includes(q)) {
+                        // Ищем по юзернейму ИЛИ по имени
+                        if(u.user !== this.me.user && (u.user.toLowerCase().includes(q) || u.name.toLowerCase().includes(q))) {
+                            found = true;
                             res.innerHTML += `
-                                <div class="chat-item" onclick="Engine.openChat('${u.user}', '${u.name}')">
-                                    <div class="avatar">${u.name[0]}</div>
-                                    <div class="chat-info"><b>${u.name}</b><br><small>${u.user}</small></div>
-                                    <i class="fa-solid fa-paper-plane" style="color:var(--p)"></i>
+                                <div class="list-item glass-panel" onclick="Sleep.openChat('${u.user}', '${u.name}')">
+                                    <div class="list-av">${u.name[0]}</div>
+                                    <div class="list-info">
+                                        <div class="list-name">${u.name}</div>
+                                        <div class="list-msg">${u.user}</div>
+                                    </div>
+                                    <i class="fa-solid fa-plus" style="font-size:24px; color:var(--p)"></i>
                                 </div>`;
                         }
                     });
+                    if(!found) res.innerHTML = '<div style="text-align:center; padding:30px; color:gray;">Никого не найдено :(</div>';
                 });
             },
 
+            // --- ЧАТЫ ---
             openChat(user, name) {
-                const chatId = [this.me.user, user].sort().join('_').replace(/@/g,'');
-                this.chat = { user, name, id: chatId };
+                const cId = [this.me.user, user].sort().join('_').replace(/@/g,'');
+                this.chat = { user, name, id: cId };
                 
-                // Добавляем в список диалогов
-                db.ref(`lists/${this.me.user.replace('@','')}/${user.replace('@','')}`).set(this.chat);
-                db.ref(`lists/${user.replace('@','')}/${this.me.user.replace('@','')}`).set({
-                    user: this.me.user, name: this.me.name, id: chatId
-                });
+                // Добавляем в списки друг другу
+                db.ref(`dialogs/${this.me.user.replace('@','')}/${user.replace('@','')}`).set({user, name, id: cId});
+                db.ref(`dialogs/${user.replace('@','')}/${this.me.user.replace('@','')}`).set({user: this.me.user, name: this.me.name, id: cId});
 
-                document.getElementById('chat-title').innerText = name;
-                this.toggleView('chat-room');
-                this.loadMessages();
+                document.getElementById('active-chat-name').innerText = name;
+                this.switchView('chat');
+                this.syncMessages();
             },
 
-            loadChatList() {
-                const container = document.getElementById('chat-list');
+            loadChats() {
                 const myId = this.me.user.replace('@','');
-                db.ref(`lists/${myId}`).on('value', snap => {
+                db.ref(`dialogs/${myId}`).on('value', snap => {
+                    const cl = document.getElementById('chat-list');
                     if(!snap.exists()) return;
-                    container.innerHTML = '';
+                    cl.innerHTML = '';
                     snap.forEach(child => {
                         const c = child.val();
-                        container.innerHTML += `
-                            <div class="chat-item" onclick="Engine.openChat('${c.user}', '${c.name}')">
-                                <div class="avatar">${c.name[0]}<div class="online-dot"></div></div>
-                                <div class="chat-info">
-                                    <div class="chat-top"><span class="chat-name">${c.name}</span><span class="chat-time">12:45</span></div>
-                                    <div class="chat-msg">Нажмите, чтобы открыть чат</div>
+                        cl.innerHTML += `
+                            <div class="list-item glass-panel" onclick="Sleep.openChat('${c.user}', '${c.name}')">
+                                <div class="list-av">${c.name[0]}<div class="status-dot"></div></div>
+                                <div class="list-info">
+                                    <div class="list-name">${c.name}</div>
+                                    <div class="list-msg" style="color:var(--p)">Перейти в чат ➔</div>
                                 </div>
                             </div>`;
                     });
                 });
             },
 
-            // --- СООБЩЕНИЯ ---
-            sendMessage() {
-                const box = document.getElementById('msg-input');
-                const txt = box.innerText.trim();
+            sendText() {
+                const inp = document.getElementById('msg-input');
+                const txt = inp.innerText.trim();
                 if(!txt || !this.chat) return;
-
-                db.ref(`messages/${this.chat.id}`).push({
-                    from: this.me.user,
-                    text: txt,
-                    time: Date.now()
-                });
-                box.innerText = '';
+                this.pushDBMessage({ type: 'text', content: txt });
+                inp.innerText = '';
             },
 
-            loadMessages() {
-                const wall = document.getElementById('messages-wall');
+            pushDBMessage(payload) {
+                db.ref(`messages/${this.chat.id}`).push({
+                    from: this.me.user,
+                    time: Date.now(),
+                    ...payload
+                });
+            },
+
+            syncMessages() {
+                const wall = document.getElementById('msg-wall');
                 db.ref(`messages/${this.chat.id}`).on('value', snap => {
                     wall.innerHTML = '';
                     snap.forEach(child => {
                         const m = child.val();
                         const isMe = m.from === this.me.user;
-                        const time = new Date(m.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                        wall.innerHTML += `
-                            <div class="msg ${isMe ? 'sent' : 'received'}">
-                                ${m.text}
-                                <span class="msg-time">${time}</span>
-                            </div>`;
+                        let html = '';
+                        
+                        if(m.type === 'text') {
+                            html = `<div class="bubble ${isMe?'sent':'received'}">${m.content}</div>`;
+                        } else if (m.type === 'audio') {
+                            html = `<div class="bubble ${isMe?'sent':'received'}" style="padding:5px 15px"><audio controls class="audio-msg" src="${m.content}"></audio></div>`;
+                        } else if (m.type === 'video') {
+                            html = `<div style="align-self: ${isMe?'flex-end':'flex-start'}"><video autoplay loop muted class="video-circle" src="${m.content}"></video></div>`;
+                        }
+                        wall.innerHTML += html;
                     });
                     wall.scrollTop = wall.scrollHeight;
                 });
             },
 
-            // --- WebRTC ЗВОНКИ ---
-            async call(type) {
-                document.getElementById('call-ui').style.display = 'flex';
-                document.getElementById('call-name').innerText = this.chat.name;
+            // --- ЗАПИСЬ ГОЛОСОВЫХ И КРУЖОЧКОВ (MediaRecorder API) ---
+            async startRecord(type) {
+                this.recType = type;
+                document.getElementById('rec-indicator').style.display = 'block';
+                document.getElementById('rec-indicator').innerText = type === 'audio' ? '🎙 Запись звука...' : '📹 Запись видео...';
                 
-                this.stream = await navigator.mediaDevices.getUserMedia({video: type==='video', audio: true});
-                document.getElementById('local-v').srcObject = this.stream;
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+                    this.mediaRec = new MediaRecorder(stream);
+                    this.audioChunks = [];
+                    this.mediaRec.ondataavailable = e => this.audioChunks.push(e.data);
+                    this.mediaRec.onstop = () => {
+                        const blob = new Blob(this.audioChunks, { type: type === 'audio' ? 'audio/webm' : 'video/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        reader.onloadend = () => {
+                            this.pushDBMessage({ type: type, content: reader.result });
+                        };
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    this.mediaRec.start();
+                } catch(e) { alert("Разрешите доступ к микрофону/камере!"); document.getElementById('rec-indicator').style.display = 'none'; }
+            },
+
+            stopRecord() {
+                document.getElementById('rec-indicator').style.display = 'none';
+                if(this.mediaRec && this.mediaRec.state === 'recording') this.mediaRec.stop();
+            },
+
+            // --- STORIES (СТАТУСЫ) ---
+            uploadStory(e) {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    db.ref('stories').push({ user: this.me.user, name: this.me.name, img: reader.result, time: Date.now() });
+                    alert("Статус опубликован на 24 часа!");
+                };
+                reader.readAsDataURL(file);
+            },
+
+            loadStories() {
+                db.ref('stories').on('value', snap => {
+                    const sl = document.getElementById('stories-list');
+                    // Сохраняем кнопку добавления
+                    const addBtn = sl.firstElementChild.outerHTML;
+                    sl.innerHTML = addBtn;
+                    
+                    const now = Date.now();
+                    snap.forEach(child => {
+                        const s = child.val();
+                        // Живет 24 часа
+                        if(now - s.time < 86400000) {
+                            sl.innerHTML += `
+                                <div class="story-wrapper" onclick="Sleep.viewStory('${s.name}', '${s.img}', '${child.key}')">
+                                    <div class="story-ring"><img class="story-av" src="${s.img}"></div>
+                                    <div class="story-name">${s.name}</div>
+                                </div>`;
+                        }
+                    });
+                });
+            },
+
+            viewStory(name, img, id) {
+                this.currentStoryId = id;
+                document.getElementById('sv-name').innerText = name;
+                document.getElementById('sv-img').src = img;
+                document.getElementById('story-viewer').style.display = 'flex';
+            },
+
+            reactStory(emoji) {
+                db.ref(`stories/${this.currentStoryId}/reacts`).push({ emoji, from: this.me.name });
+                document.getElementById('story-viewer').style.display = 'none';
+                alert("Реакция " + emoji + " отправлена!");
+            },
+
+            // --- ЗВОНКИ (WebRTC + Firebase Signaling) ---
+            async startCall(type) {
+                document.getElementById('call-ui').style.display = 'flex';
+                document.getElementById('call-status').innerText = 'Звоним ' + this.chat.name + '...';
+                
+                this.localStream = await navigator.mediaDevices.getUserMedia({video: type==='video', audio: true});
+                document.getElementById('local-video').srcObject = this.localStream;
 
                 this.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-                this.stream.getTracks().forEach(t => this.pc.addTrack(t, this.stream));
-                this.pc.ontrack = e => document.getElementById('remote-v').srcObject = e.streams[0];
+                this.localStream.getTracks().forEach(t => this.pc.addTrack(t, this.localStream));
+                this.pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
 
                 const callRef = db.ref(`calls/${this.chat.id}`);
                 this.pc.onicecandidate = e => e.candidate && callRef.child('ice').push(e.candidate.toJSON());
 
                 const offer = await this.pc.createOffer();
                 await this.pc.setLocalDescription(offer);
-                callRef.set({ offer, from: this.me.user, fromName: this.me.name });
+                callRef.set({ offer, from: this.me.user, name: this.me.name, type });
 
                 callRef.on('value', async s => {
                     const d = s.val();
-                    if(d?.answer && !this.pc.currentRemoteDescription) await this.pc.setRemoteDescription(d.answer);
-                    if(!d && this.pc) this.hangup(false);
+                    if(d && d.answer && !this.pc.currentRemoteDescription) {
+                        document.getElementById('call-status').innerText = 'На связи';
+                        await this.pc.setRemoteDescription(d.answer);
+                    }
+                    if(!d && this.pc) this.endCall(false);
                 });
                 callRef.child('ice').on('child_added', s => this.pc.addIceCandidate(new RTCIceCandidate(s.val())));
             },
 
-            listenIncomingCalls() {
+            listenCalls() {
                 const myId = this.me.user.replace('@','');
                 db.ref('calls').on('child_added', async snap => {
                     const d = snap.val();
                     if(d.from !== this.me.user && snap.key.includes(myId)) {
-                        if(confirm("Входящий звонок от " + d.fromName)) this.accept(snap.key, d);
+                        if(confirm(`Входящий ${d.type==='video'?'видеозвонок':'звонок'} от ${d.name}!`)) this.answerCall(snap.key, d);
                         else db.ref(`calls/${snap.key}`).remove();
                     }
                 });
             },
 
-            async accept(id, d) {
+            async answerCall(id, d) {
                 document.getElementById('call-ui').style.display = 'flex';
-                this.stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                document.getElementById('local-v').srcObject = this.stream;
+                document.getElementById('call-status').innerText = 'На связи';
+
+                this.localStream = await navigator.mediaDevices.getUserMedia({video: d.type==='video', audio: true});
+                document.getElementById('local-video').srcObject = this.localStream;
                 this.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-                this.stream.getTracks().forEach(t => this.pc.addTrack(t, this.stream));
-                this.pc.ontrack = e => document.getElementById('remote-v').srcObject = e.streams[0];
+                this.localStream.getTracks().forEach(t => this.pc.addTrack(t, this.localStream));
+                this.pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
 
                 const callRef = db.ref(`calls/${id}`);
                 this.pc.onicecandidate = e => e.candidate && callRef.child('ice').push(e.candidate.toJSON());
+                
                 await this.pc.setRemoteDescription(new RTCSessionDescription(d.offer));
                 const answer = await this.pc.createAnswer();
                 await this.pc.setLocalDescription(answer);
                 callRef.update({ answer });
 
                 callRef.child('ice').on('child_added', s => this.pc.addIceCandidate(new RTCIceCandidate(s.val())));
-                callRef.on('value', s => { if(!s.val()) this.hangup(false); });
+                callRef.on('value', s => { if(!s.val()) this.endCall(false); });
             },
 
-            hangup(notif = true) {
-                if(this.stream) this.stream.getTracks().forEach(t => t.stop());
+            endCall(notify = true) {
+                if(this.localStream) this.localStream.getTracks().forEach(t => t.stop());
                 if(this.pc) this.pc.close();
                 document.getElementById('call-ui').style.display = 'none';
-                if(notif && this.chat) db.ref(`calls/${this.chat.id}`).remove();
-            },
-
-            // --- ОПЦИИ ---
-            toggleTheme() {
-                this.me.theme = this.me.theme === 'light' ? 'dark' : 'light';
-                document.body.setAttribute('data-theme', this.me.theme);
-                localStorage.setItem('slp_ult', JSON.stringify(this.me));
-                document.getElementById('theme-status').innerText = this.me.theme === 'light' ? 'Выкл' : 'Вкл';
+                if(notify && this.chat) db.ref(`calls/${this.chat.id}`).remove();
             },
 
             logout() { localStorage.clear(); location.reload(); }
         };
 
-        // Запуск
-        Engine.init();
+        // Старт системы
+        Sleep.init();
     </script>
 </body>
 </html>
