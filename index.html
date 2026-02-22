@@ -1,529 +1,426 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sleep Messenger | Enterprise Build</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sleep Messenger</title>
 
-    <style>
-        /* =========================================
-           1. МОЩНЫЙ UI KIT (APPLE STYLE)
-           ========================================= */
-        :root {
-            --bg: #ffffff;
-            --bg-sec: #f2f2f7;
-            --item-bg: #ffffff;
-            --text: #000000;
-            --text-muted: #8e8e93;
-            --accent: #007aff;
-            --accent-soft: rgba(0, 122, 255, 0.1);
-            --border: #c6c6c8;
-            --msg-in: #e9e9eb;
-            --msg-out: #007aff;
-            --msg-text-out: #ffffff;
-            --status-online: #34c759;
-            --status-call: #ff3b30;
-            --safe-top: env(safe-area-inset-top);
-        }
+<style>
 
-        .dark-mode {
-            --bg: #1c1c1e;
-            --bg-sec: #000000;
-            --item-bg: #2c2c2e;
-            --text: #ffffff;
-            --border: #38383a;
-            --msg-in: #3a3a3c;
-            --msg-out: #0a84ff;
-        }
+/* =======================
+   TELEGRAM PRO UI
+======================= */
 
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 
-        body { 
-            background: var(--bg); color: var(--text); 
-            height: 100vh; width: 100vw; overflow: hidden; 
-        }
+body{
+height:100vh;
+display:flex;
+background:#0e1621;
+color:white;
+overflow:hidden;
+}
 
-        /* Анимации экранов */
-        .screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg); display: none; flex-direction: column;
-            z-index: 10; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .screen.active { display: flex; }
-        
-        /* =========================================
-           2. РЕГИСТРАЦИЯ (USERNAME + NAME)
-           ========================================= */
-        .auth-wrapper {
-            flex: 1; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; padding: 40px;
-        }
-        .auth-card {
-            width: 100%; max-width: 350px; text-align: center;
-        }
-        .auth-logo {
-            width: 90px; height: 90px; background: var(--accent);
-            border-radius: 24px; margin: 0 auto 30px;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 45px; box-shadow: 0 10px 30px var(--accent-soft);
-        }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { 
-            display: block; font-size: 12px; font-weight: 700; 
-            color: var(--text-muted); text-transform: uppercase;
-            margin-bottom: 8px; margin-left: 5px;
-        }
-        .modern-input {
-            width: 100%; padding: 18px; border-radius: 16px;
-            border: 2px solid var(--bg-sec); background: var(--bg-sec);
-            color: var(--text); font-size: 16px; outline: none; transition: 0.3s;
-        }
-        .modern-input:focus { border-color: var(--accent); background: var(--bg); }
-        .btn-primary {
-            width: 100%; padding: 18px; border-radius: 16px;
-            background: var(--accent); color: #fff; border: none;
-            font-size: 18px; font-weight: 700; cursor: pointer;
-            box-shadow: 0 5px 15px var(--accent-soft);
-        }
+/* LOGIN */
 
-        /* =========================================
-           3. ГЛАВНЫЙ ЭКРАН (STORIES & LIST)
-           ========================================= */
-        .app-header {
-            height: calc(65px + var(--safe-top)); padding-top: var(--safe-top);
-            display: flex; align-items: center; padding-inline: 20px;
-            background: var(--bg); border-bottom: 0.5px solid var(--border);
-            z-index: 100;
-        }
-        .h-title { flex: 1; text-align: center; font-weight: 800; font-size: 20px; }
-        .h-btn { font-size: 22px; color: var(--accent); cursor: pointer; width: 40px; display: flex; justify-content: center; }
+#login{
+margin:auto;
+background:#17212b;
+padding:30px;
+border-radius:12px;
+width:320px;
+text-align:center;
+}
 
-        /* Stories */
-        .stories-bar {
-            display: flex; gap: 15px; padding: 15px 20px;
-            overflow-x: auto; background: var(--bg);
-            border-bottom: 0.5px solid var(--border);
-        }
-        .stories-bar::-webkit-scrollbar { display: none; }
-        .story-unit { flex-shrink: 0; width: 68px; text-align: center; }
-        .story-border {
-            width: 66px; height: 66px; border-radius: 50%;
-            border: 2.5px solid var(--accent); padding: 3px; margin-bottom: 5px;
-        }
-        .story-ava {
-            width: 100%; height: 100%; border-radius: 50%;
-            background: var(--bg-sec); display: flex; align-items: center; justify-content: center;
-            font-weight: 900; color: #fff; font-size: 20px;
-        }
-        .story-unit span { font-size: 11px; color: var(--text-muted); display: block; overflow: hidden; text-overflow: ellipsis; }
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+}
 
-        /* User List */
-        .user-list { flex: 1; overflow-y: auto; background: var(--bg); }
-        .user-card {
-            display: flex; align-items: center; padding: 12px 20px; gap: 15px;
-            cursor: pointer; position: relative;
-        }
-        .user-card:active { background: var(--bg-sec); }
-        .avatar-wrap { position: relative; }
-        .u-avatar {
-            width: 60px; height: 60px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: 800; font-size: 22px;
-        }
-        .u-online {
-            width: 15px; height: 15px; background: var(--status-online);
-            border-radius: 50%; position: absolute; bottom: 2px; right: 2px;
-            border: 3px solid var(--bg);
-        }
-        .u-info { flex: 1; border-bottom: 0.5px solid var(--border); padding-bottom: 15px; }
-        .u-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .u-name { font-weight: 700; font-size: 17px; }
-        .u-time { font-size: 12px; color: var(--text-muted); }
-        .u-lastmsg { font-size: 14px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+button{
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:8px;
+background:#2AABEE;
+color:white;
+cursor:pointer;
+}
 
-        /* =========================================
-           4. ЭКРАН ЧАТА (MESSAGES, CALLS, INPUT)
-           ========================================= */
-        .chat-body { flex: 1; background: var(--bg-sec); display: flex; flex-direction: column; overflow: hidden; }
-        .msgs-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        
-        .msg-bubble {
-            max-width: 75%; padding: 10px 14px; border-radius: 20px; font-size: 15px;
-            line-height: 1.4; position: relative; word-wrap: break-word;
-        }
-        .msg-bubble.in { align-self: flex-start; background: var(--bg); color: var(--text); border-bottom-left-radius: 4px; }
-        .msg-bubble.out { align-self: flex-end; background: var(--msg-out); color: var(--msg-text-out); border-bottom-right-radius: 4px; }
-        .msg-time { font-size: 10px; opacity: 0.6; display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-top: 4px; }
+/* APP */
 
-        /* Typing & Input */
-        .typing-status { padding: 5px 20px; font-size: 12px; color: var(--accent); font-weight: 600; display: none; }
-        .input-area {
-            background: var(--bg); padding: 10px 15px calc(15px + env(safe-area-inset-bottom));
-            display: flex; align-items: center; gap: 12px; border-top: 0.5px solid var(--border);
-        }
-        .input-wrap {
-            flex: 1; background: var(--bg-sec); border-radius: 25px;
-            padding: 8px 18px; display: flex; align-items: center;
-        }
-        .input-wrap input { flex: 1; background: none; border: none; outline: none; font-size: 16px; color: var(--text); }
-        .action-btn { font-size: 24px; color: var(--accent); cursor: pointer; transition: 0.2s; }
+#app{
+display:none;
+width:100%;
+height:100%;
+}
 
-        /* =========================================
-           5. CALL SCREEN
-           ========================================= */
-        #screen-call { background: #1c1c1e; color: #fff; align-items: center; justify-content: space-around; }
-        .call-avatar {
-            width: 140px; height: 140px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 60px; border: 4px solid rgba(255,255,255,0.1);
-        }
-        .call-controls { display: flex; gap: 40px; }
-        .call-btn {
-            width: 70px; height: 70px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; cursor: pointer;
-        }
+/* SIDEBAR */
 
-    </style>
+.sidebar{
+width:320px;
+background:#17212b;
+display:flex;
+flex-direction:column;
+}
+
+.dialog{
+padding:12px;
+border-bottom:1px solid #0e1621;
+cursor:pointer;
+}
+
+.dialog:hover{
+background:#1f2c3a;
+}
+
+.online{
+color:#4ade80;
+font-size:12px;
+}
+
+/* CHAT */
+
+.chat{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+.header{
+padding:15px;
+background:#17212b;
+}
+
+.messages{
+flex:1;
+overflow-y:auto;
+padding:15px;
+}
+
+.message{
+background:#182533;
+padding:10px;
+margin:6px 0;
+border-radius:10px;
+max-width:65%;
+}
+
+.me{
+background:#2AABEE;
+margin-left:auto;
+}
+
+.typing{
+font-size:12px;
+opacity:.7;
+padding:5px;
+}
+
+.inputBar{
+display:flex;
+gap:5px;
+padding:10px;
+background:#17212b;
+}
+
+img{
+max-width:200px;
+border-radius:10px;
+margin-top:5px;
+}
+
+audio,video{
+width:200px;
+margin-top:5px;
+border-radius:8px;
+}
+
+</style>
 </head>
+
 <body>
 
-    <div class="viewport">
-        
-        <div id="screen-reg" class="screen active">
-            <div class="auth-wrapper">
-                <div class="auth-card">
-                    <div class="auth-logo"><i class="fa-solid fa-moon"></i></div>
-                    <h1 style="font-weight: 900; letter-spacing: -1px; margin-bottom: 5px;">Sleep Cloud</h1>
-                    <p style="color: var(--text-muted); margin-bottom: 40px;">Professional Messenger</p>
-                    
-                    <div class="input-group">
-                        <label>Юзернейм (@username)</label>
-                        <input type="text" id="reg-user" class="modern-input" placeholder="например: ivan_2026">
-                    </div>
-                    <div class="input-group">
-                        <label>Ваше Имя</label>
-                        <input type="text" id="reg-name" class="modern-input" placeholder="Как вас зовут?">
-                    </div>
-                    
-                    <button class="btn-primary" onclick="App.handleReg()">Создать аккаунт</button>
-                    <p id="reg-error" style="color: var(--status-call); margin-top: 20px; font-weight: 600; font-size: 14px;"></p>
-                </div>
-            </div>
-        </div>
+<!-- LOGIN -->
 
-        <div id="screen-main" class="screen">
-            <div class="app-header">
-                <div class="h-btn" onclick="App.logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
-                <div class="h-title">Сообщения</div>
-                <div class="h-btn" onclick="App.toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i></div>
-            </div>
-            
-            <div class="stories-bar" id="stories-root">
-                </div>
+<div id="login">
+<h2>Sleep Messenger</h2>
+<input id="name" placeholder="Имя">
+<input id="username" placeholder="@username">
+<button onclick="start()">Войти</button>
+</div>
 
-            <div class="user-list" id="users-root">
-                <div style="padding: 50px; text-align: center; color: var(--text-muted);">Загрузка контактов...</div>
-            </div>
-        </div>
+<!-- APP -->
 
-        <div id="screen-chat" class="screen">
-            <div class="app-header">
-                <div class="h-btn" onclick="App.showScreen('screen-main')"><i class="fa-solid fa-chevron-left"></i></div>
-                <div style="flex: 1; text-align: center;" onclick="App.startCall()">
-                    <div class="h-title" id="chat-user-name" style="font-size: 17px;">Имя</div>
-                    <div id="chat-user-status" style="font-size: 11px; color: var(--status-online);">в сети</div>
-                </div>
-                <div class="h-btn" onclick="App.startCall()"><i class="fa-solid fa-phone"></i></div>
-                <div class="h-btn"><i class="fa-solid fa-video"></i></div>
-            </div>
+<div id="app">
 
-            <div class="chat-body">
-                <div class="msgs-container" id="msgs-root"></div>
-                <div class="typing-status" id="typing-ui">печатает...</div>
-                
-                <div class="input-area">
-                    <i class="fa-solid fa-circle-play action-btn" style="opacity: 0.5;" title="Видео-сообщение"></i>
-                    <div class="input-wrap">
-                        <input type="text" id="msg-input" placeholder="Сообщение" oninput="App.typingTrigger()">
-                    </div>
-                    <i class="fa-solid fa-microphone action-btn" id="voice-btn"></i>
-                    <i class="fa-solid fa-circle-arrow-up action-btn" id="send-btn" onclick="App.sendMessage()" style="display: none;"></i>
-                </div>
-            </div>
-        </div>
+<div class="sidebar">
+<input id="search" placeholder="Найти пользователя">
+<button onclick="findUser()">Найти</button>
 
-        <div id="screen-call" class="screen">
-            <div style="text-align: center;">
-                <div class="call-avatar" id="call-ava">?</div>
-                <h2 id="call-name" style="margin-top: 20px; font-size: 28px;">Имя</h2>
-                <p style="color: #8e8e93; margin-top: 10px;">Sleep Audio Call...</p>
-            </div>
-            <div class="call-controls">
-                <div class="call-btn" style="background: #3a3a3c;"><i class="fa-solid fa-microphone-slash"></i></div>
-                <div class="call-btn" style="background: var(--status-call);" onclick="App.showScreen('screen-chat')"><i class="fa-solid fa-phone-slash"></i></div>
-                <div class="call-btn" style="background: #3a3a3c;"><i class="fa-solid fa-volume-high"></i></div>
-            </div>
-        </div>
+<div id="dialogs"></div>
+</div>
 
-    </div>
+<div class="chat">
 
-    <script>
-        /* =========================================
-           6. ЛОГИКА (FIREBASE + ACTIONS)
-           ========================================= */
+<div id="chatHeader" class="header">Чат</div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDzCviqV3rCSLZL-K8h7n6j7aLGkZEmybM",
-            authDomain: "sleep-menager.firebaseapp.com",
-            databaseURL: "https://sleep-menager-default-rtdb.firebaseio.com",
-            projectId: "sleep-menager",
-            storageBucket: "sleep-menager.firebasestorage.app",
-            messagingSenderId: "3927631074",
-            appId: "1:3927631074:web:a3a604c7147e31a900eabb"
-        };
+<div id="messages" class="messages"></div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<div id="typing" class="typing"></div>
 
-        const App = {
-            me: null,
-            target: null,
-            colors: ['#007aff', '#34c759', '#ff9500', '#af52de', '#ff3b30', '#5856d6'],
+<div class="inputBar">
+<input id="text" placeholder="Сообщение">
+<input type="file" id="photo" hidden>
+<button onclick="sendText()">➤</button>
+<button onclick="photo.click()">🖼</button>
+<button onclick="voice()">🎤</button>
+<button onclick="videoMsg()">📹</button>
+</div>
 
-            init() {
-                const session = localStorage.getItem('sleep_session_v2');
-                if (session) {
-                    this.me = JSON.parse(session);
-                    this.updateOnline(true);
-                    this.showScreen('screen-main');
-                    this.listenUsers();
-                }
+</div>
+</div>
 
-                // Исправленное переключение кнопок Отправить/ГС
-                document.getElementById('msg-input').addEventListener('input', (e) => {
-                    const sendBtn = document.getElementById('send-btn');
-                    const voiceBtn = document.getElementById('voice-btn');
-                    if(e.target.value.trim().length > 0) {
-                        sendBtn.style.display = 'block';
-                        voiceBtn.style.display = 'none';
-                    } else {
-                        sendBtn.style.display = 'none';
-                        voiceBtn.style.display = 'block';
-                    }
-                });
-            },
+<script type="module">
 
-            // --- AUTH ---
-            async handleReg() {
-                const user = document.getElementById('reg-user').value.trim().toLowerCase();
-                const name = document.getElementById('reg-name').value.trim();
-                const err = document.getElementById('reg-error');
+/* ================= FIREBASE ================= */
 
-                if (user.length < 3 || name.length < 2) {
-                    return err.innerText = "Слишком короткие данные!";
-                }
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-                err.innerText = "Проверка доступа...";
-                
-                const snap = await db.ref('users').orderByChild('username').equalTo(user).once('value');
-                
-                if (snap.exists()) {
-                    // Если пользователь уже есть, "логиним" его
-                    const uid = Object.keys(snap.val())[0];
-                    this.me = snap.val()[uid];
-                } else {
-                    // Если нет - создаем
-                    const uid = 'u_' + Date.now();
-                    this.me = {
-                        uid: uid,
-                        username: user,
-                        name: name,
-                        color: this.colors[Math.floor(Math.random() * 6)],
-                        isOnline: true,
-                        lastSeen: Date.now()
-                    };
-                    await db.ref('users/' + uid).set(this.me);
-                }
+import {
+getDatabase,ref,set,get,push,onChildAdded,onValue
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-                localStorage.setItem('sleep_session_v2', JSON.stringify(this.me));
-                location.reload();
-            },
+import {
+getStorage,ref as sRef,uploadBytes,getDownloadURL
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-            // --- MAIN LIST & STORIES ---
-            listenUsers() {
-                db.ref('users').on('value', snap => {
-                    const root = document.getElementById('users-root');
-                    const stories = document.getElementById('stories-root');
-                    root.innerHTML = '';
-                    stories.innerHTML = `
-                        <div class="story-unit">
-                            <div class="story-border" style="border-color: #d1d1d6;">
-                                <div class="story-ava" style="background:#eee; color:#666">+</div>
-                            </div>
-                            <span>Ваша</span>
-                        </div>
-                    `;
+import {
+getAuth,signInAnonymously
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-                    snap.forEach(child => {
-                        const u = child.val();
-                        if (u.uid === this.me.uid) return;
 
-                        // Рендер списка чатов
-                        root.innerHTML += `
-                            <div class="user-card" onclick="App.openChat('${u.uid}')">
-                                <div class="avatar-wrap">
-                                    <div class="u-avatar" style="background:${u.color}">${u.name[0]}</div>
-                                    ${u.isOnline ? '<div class="u-online"></div>' : ''}
-                                </div>
-                                <div class="u-info">
-                                    <div class="u-header">
-                                        <span class="u-name">${u.name}</span>
-                                        <span class="u-time">14:02</span>
-                                    </div>
-                                    <div class="u-lastmsg">@${u.username} • Напишите привет!</div>
-                                </div>
-                            </div>
-                        `;
+const firebaseConfig={
+apiKey:"AIzaSyDzCviqV3rCSLZL-K8h7n6j7aLGkZEmybM",
+authDomain:"sleep-menager.firebaseapp.com",
+databaseURL:"https://sleep-menager-default-rtdb.firebaseio.com",
+projectId:"sleep-menager",
+storageBucket:"sleep-menager.firebasestorage.app",
+messagingSenderId:"3927631074",
+appId:"1:3927631074:web:a3a604c7147e31a900eabb"
+};
 
-                        // Рендер сторис
-                        stories.innerHTML += `
-                            <div class="story-unit">
-                                <div class="story-border">
-                                    <div class="story-ava" style="background:${u.color}">${u.name[0]}</div>
-                                </div>
-                                <span>${u.name.split(' ')[0]}</span>
-                            </div>
-                        `;
-                    });
-                });
-            },
+const appFirebase=initializeApp(firebaseConfig);
+const db=getDatabase(appFirebase);
+const storage=getStorage(appFirebase);
+const auth=getAuth(appFirebase);
 
-            // --- CHAT SYSTEM ---
-            async openChat(uid) {
-                const snap = await db.ref('users/' + uid).once('value');
-                this.target = snap.val();
-                
-                document.getElementById('chat-user-name').innerText = this.target.name;
-                document.getElementById('chat-user-status').innerText = this.target.isOnline ? 'в сети' : 'был(а) недавно';
-                
-                this.showScreen('screen-chat');
-                this.listenMessages();
-                this.listenTyping();
-            },
+/* ================= STATE ================= */
 
-            listenMessages() {
-                const chatId = [this.me.uid, this.target.uid].sort().join('_');
-                db.ref('messages/' + chatId).off();
-                db.ref('messages/' + chatId).on('value', snap => {
-                    const root = document.getElementById('msgs-root');
-                    root.innerHTML = '';
-                    snap.forEach(child => {
-                        const m = child.val();
-                        const side = m.sender === this.me.uid ? 'out' : 'in';
-                        const time = new Date(m.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                        
-                        // Галочки
-                        const ticks = m.sender === this.me.uid ? '<i class="fa-solid fa-check-double" style="margin-left:3px; font-size:9px;"></i>' : '';
+let user;
+let chatId=null;
 
-                        root.innerHTML += `
-                            <div class="msg-bubble ${side}">
-                                ${this.escape(m.text)}
-                                <div class="msg-time">${time} ${ticks}</div>
-                            </div>
-                        `;
-                    });
-                    root.scrollTop = root.scrollHeight;
-                });
-            },
+/* ================= LOGIN ================= */
 
-            sendMessage() {
-                const input = document.getElementById('msg-input');
-                const text = input.value.trim();
-                if (!text || !this.target) return;
+window.start=async()=>{
 
-                const chatId = [this.me.uid, this.target.uid].sort().join('_');
-                db.ref('messages/' + chatId).push({
-                    sender: this.me.uid,
-                    text: text,
-                    time: Date.now()
-                });
+await signInAnonymously(auth);
 
-                input.value = '';
-                input.dispatchEvent(new Event('input')); // сброс кнопок
-                this.stopTyping();
-            },
+user={
+name:name.value,
+username:username.value
+};
 
-            // --- STATUSES ---
-            typingTrigger() {
-                if(!this.target) return;
-                const chatId = [this.me.uid, this.target.uid].sort().join('_');
-                db.ref('typing/' + chatId + '/' + this.me.uid).set(true);
-                
-                clearTimeout(this.typeTimer);
-                this.typeTimer = setTimeout(() => this.stopTyping(), 2000);
-            },
+await set(ref(db,"users/"+user.username),{
+...user,
+online:true
+});
 
-            stopTyping() {
-                if(!this.target) return;
-                const chatId = [this.me.uid, this.target.uid].sort().join('_');
-                db.ref('typing/' + chatId + '/' + this.me.uid).remove();
-            },
+login.style.display="none";
+app.style.display="flex";
 
-            listenTyping() {
-                const chatId = [this.me.uid, this.target.uid].sort().join('_');
-                db.ref('typing/' + chatId + '/' + this.target.uid).on('value', snap => {
-                    document.getElementById('typing-ui').style.display = snap.val() ? 'block' : 'none';
-                });
-            },
+loadDialogs();
+};
 
-            // --- OTHER ---
-            startCall() {
-                document.getElementById('call-name').innerText = this.target.name;
-                const ava = document.getElementById('call-ava');
-                ava.innerText = this.target.name[0];
-                ava.style.background = this.target.color;
-                this.showScreen('screen-call');
-            },
+/* ONLINE STATUS */
 
-            showScreen(id) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-            },
+window.addEventListener("beforeunload",()=>{
+set(ref(db,"users/"+user.username+"/online"),false);
+});
 
-            updateOnline(status) {
-                if (this.me) db.ref('users/' + this.me.uid).update({ isOnline: status, lastSeen: Date.now() });
-            },
+/* ================= USER SEARCH ================= */
 
-            toggleTheme() {
-                document.body.classList.toggle('dark-mode');
-            },
+window.findUser=async()=>{
 
-            logout() {
-                if(confirm("Выйти из аккаунта?")) {
-                    this.updateOnline(false);
-                    localStorage.clear();
-                    location.reload();
-                }
-            },
+const uname=search.value;
+const snap=await get(ref(db,"users/"+uname));
 
-            escape(t) {
-                const d = document.createElement('div');
-                d.textContent = t;
-                return d.innerHTML;
-            }
-        };
+if(!snap.exists())return alert("Нет пользователя");
 
-        window.onload = () => App.init();
-        window.onbeforeunload = () => App.updateOnline(false);
-    </script>
+openChat(uname);
+};
+
+/* ================= OPEN CHAT ================= */
+
+function openChat(other){
+
+chatId=[user.username,other].sort().join("_");
+
+chatHeader.innerText=other;
+messages.innerHTML="";
+
+listenMessages();
+listenTyping(other);
+}
+
+/* ================= LOAD MESSAGES ================= */
+
+function listenMessages(){
+
+onChildAdded(ref(db,"chats/"+chatId+"/messages"),snap=>{
+renderMessage(snap.val(),snap.key);
+});
+}
+
+/* ================= RENDER ================= */
+
+function renderMessage(msg,key){
+
+const div=document.createElement("div");
+div.className="message";
+
+if(msg.username===user.username)
+div.classList.add("me");
+
+if(msg.type==="text")
+div.innerHTML=msg.text;
+
+if(msg.type==="image")
+div.innerHTML=`<img src="${msg.url}">`;
+
+if(msg.type==="voice")
+div.innerHTML=`<audio controls src="${msg.url}"></audio>`;
+
+if(msg.type==="video")
+div.innerHTML=`<video controls src="${msg.url}"></video>`;
+
+div.onclick=()=>{
+push(ref(db,"reactions/"+chatId+"/"+key),{
+emoji:"❤️"
+});
+};
+
+messages.appendChild(div);
+messages.scrollTop=messages.scrollHeight;
+}
+
+/* ================= TYPING ================= */
+
+text.oninput=()=>{
+set(ref(db,"typing/"+chatId+"/"+user.username),true);
+
+setTimeout(()=>{
+set(ref(db,"typing/"+chatId+"/"+user.username),false);
+},1000);
+};
+
+function listenTyping(other){
+
+onValue(ref(db,"typing/"+chatId+"/"+other),snap=>{
+typing.innerText=snap.val()?"печатает...":"";
+});
+}
+
+/* ================= SEND TEXT ================= */
+
+window.sendText=()=>{
+if(!chatId)return;
+
+push(ref(db,"chats/"+chatId+"/messages"),{
+type:"text",
+username:user.username,
+text:text.value
+});
+
+text.value="";
+};
+
+/* ================= PHOTO ================= */
+
+photo.onchange=async()=>{
+
+const file=photo.files[0];
+const refFile=sRef(storage,"img/"+Date.now());
+
+await uploadBytes(refFile,file);
+const url=await getDownloadURL(refFile);
+
+push(ref(db,"chats/"+chatId+"/messages"),{
+type:"image",
+username:user.username,
+url:url
+});
+};
+
+/* ================= VOICE ================= */
+
+let recorder,chunks=[];
+
+window.voice=async()=>{
+const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+recorder=new MediaRecorder(stream);
+
+chunks=[];
+recorder.ondataavailable=e=>chunks.push(e.data);
+recorder.onstop=async()=>{
+const blob=new Blob(chunks);
+const r=sRef(storage,"voice/"+Date.now());
+await uploadBytes(r,blob);
+const url=await getDownloadURL(r);
+
+push(ref(db,"chats/"+chatId+"/messages"),{
+type:"voice",
+username:user.username,
+url
+});
+};
+
+recorder.start();
+setTimeout(()=>recorder.stop(),4000);
+};
+
+/* ================= VIDEO ================= */
+
+window.videoMsg=async()=>{
+const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+recorder=new MediaRecorder(stream);
+
+chunks=[];
+recorder.ondataavailable=e=>chunks.push(e.data);
+recorder.onstop=async()=>{
+const blob=new Blob(chunks);
+const r=sRef(storage,"video/"+Date.now());
+await uploadBytes(r,blob);
+const url=await getDownloadURL(r);
+
+push(ref(db,"chats/"+chatId+"/messages"),{
+type:"video",
+username:user.username,
+url
+});
+};
+
+recorder.start();
+setTimeout(()=>recorder.stop(),4000);
+};
+
+</script>
 </body>
 </html>
